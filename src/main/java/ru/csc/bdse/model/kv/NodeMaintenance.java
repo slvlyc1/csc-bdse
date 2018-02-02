@@ -1,6 +1,7 @@
 package ru.csc.bdse.model.kv;
 
 import java.util.Map;
+import java.util.Properties;
 
 /**
  * Interface for node maintenance
@@ -9,7 +10,7 @@ import java.util.Map;
  */
 public interface NodeMaintenance {
 
-    Map<String, Integer> status(); //TODO
+    Properties status();
 
     void shutdown(String node);
 

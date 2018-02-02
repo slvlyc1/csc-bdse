@@ -2,12 +2,15 @@ package ru.csc.bdse.impl.kv;
 
 import ru.csc.bdse.model.kv.KeyValueStorageNode;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.io.IOException;
+import java.util.*;
+import java.util.concurrent.Callable;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /**
- * TODO
+ * Implementation of [[KeyValueStorageNode]] in memory
  *
  * @author alesavin
  */
@@ -23,30 +26,25 @@ public class InMemoryKeyValueStorageNode implements KeyValueStorageNode {
     }
 
     @Override
-    public void upsert(String key, byte[] value) {
-        map.put(key, value);
+    public void upsert(String key, byte[] value) throws Exception {
+        wrapIsShutdown(() -> map.put(key, value));
     }
 
     @Override
-    public byte[] get(String key) {
-        return map.get(key);
+    public byte[] get(String key) throws Exception {
+        return wrapIsShutdown(() -> map.get(key));
     }
 
     @Override
-    public byte[] delete(String key) {
-        return map.remove(key);
+    public Set<String> keys(Predicate<String> predicate) throws Exception {
+        return wrapIsShutdown(() -> map.keySet().stream().filter(predicate).collect(Collectors.toSet()));
     }
 
     @Override
-    public Iterator<String> keysIterator() {
-        return map.keySet().iterator();
-    }
-
-    @Override
-    public Map<String, Integer> status() {
-        Map<String,Integer> m = new HashMap<>();
-        m.put(name, isShutdown ? -1 : 0);
-        return m;
+    public Properties status() {
+        final Properties properties = new Properties();
+        properties.setProperty(name, isShutdown ? "DOWN" : "UP");
+        return properties;
     }
 
     @Override
@@ -57,5 +55,13 @@ public class InMemoryKeyValueStorageNode implements KeyValueStorageNode {
     @Override
     public void start(String node) {
         if (name.equals(node) && isShutdown) isShutdown = false;
+    }
+
+    private <R> R wrapIsShutdown(Callable<R> callable) throws Exception {
+        if (!isShutdown) {
+            return callable.call();
+        } else {
+            throw new IOException("Node " + name + " is shut down");
+        }
     }
 }

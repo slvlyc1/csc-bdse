@@ -1,5 +1,7 @@
 package ru.csc.bdse.model.kv;
 
+import java.io.IOException;
+
 /**
  * Interface for key-value storage node
  *
