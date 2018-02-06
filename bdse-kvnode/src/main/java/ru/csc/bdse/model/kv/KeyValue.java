@@ -14,7 +14,7 @@ import java.util.function.Predicate;
  */
 public interface KeyValue<K, V> {
 
-    void upsert(K key, V value) throws Exception;
+    void put(K key, V value) throws Exception;
 
     V get(K key) throws Exception;
 

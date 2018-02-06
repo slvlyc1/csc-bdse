@@ -26,11 +26,11 @@ public class HttpKeyValueStorageNodeClient implements KeyValueStorageNodeClient 
     }
 
     @Override
-    public void upsert(String key, byte[] value) throws IOException {
+    public void put(String key, byte[] value) throws IOException {
         HttpEntity<byte[]> requestEntity = value == null || value.length == 0 ?
                     new HttpEntity<>(headers) : new HttpEntity<>(value, headers);
         ResponseEntity<Void> responseEntity =
-                rest.postForEntity(baseUrl + "/upsert/" + key, requestEntity, Void.class);
+                rest.postForEntity(baseUrl + "/put/" + key, requestEntity, Void.class);
         if (!responseEntity.getStatusCode().is2xxSuccessful())
             throw new IOException("Node return " + responseEntity);
     }
@@ -78,10 +78,10 @@ public class HttpKeyValueStorageNodeClient implements KeyValueStorageNodeClient 
     }
 
     @Override
-    public void command(String node, String command) throws IOException {
+    public void action(String node, String action) throws IOException {
         HttpEntity<Void> requestEntity = new HttpEntity<Void>(headers);
         ResponseEntity<Void> responseEntity =
-                rest.postForEntity(baseUrl + "/command/" + node + "/" + command, requestEntity, Void.class);
+                rest.postForEntity(baseUrl + "/action/" + node + "/" + action, requestEntity, Void.class);
         if (!responseEntity.getStatusCode().is2xxSuccessful())
             throw new IOException("Node return " + responseEntity);
     }

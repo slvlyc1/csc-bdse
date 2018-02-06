@@ -1,6 +1,5 @@
 package ru.csc.bdse.model.kv;
 
-import java.util.Map;
 import java.util.Properties;
 
 /**
@@ -12,5 +11,5 @@ public interface NodeMaintenance {
 
     Properties status();
 
-    void command(String node, String command);
+    void action(String node, Action action);
 }

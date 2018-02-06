@@ -10,7 +10,7 @@ import java.util.Optional;
  */
 public interface KeyValueStorageNodeClient {
 
-    void upsert(String key, byte[] value) throws IOException;
+    void put(String key, byte[] value) throws IOException;
 
     Optional<byte[]> get(String key) throws IOException;
 
@@ -18,5 +18,5 @@ public interface KeyValueStorageNodeClient {
 
     String status() throws IOException;
 
-    void command(String node, String command) throws IOException;
+    void action(String node, String action) throws IOException;
 }
