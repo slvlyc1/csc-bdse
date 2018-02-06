@@ -26,7 +26,12 @@ public class InMemoryKeyValueStorageNode implements KeyValueStorageNode {
 
     @Override
     public void upsert(String key, byte[] value) throws Exception {
-        wrapIsShutdown(() -> map.put(key, value));
+        wrapIsShutdown(() -> {
+            if (value == null)
+                return map.remove(key);
+            else
+                return map.put(key, value);
+        });
     }
 
     @Override

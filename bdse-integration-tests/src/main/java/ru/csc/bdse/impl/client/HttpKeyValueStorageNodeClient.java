@@ -27,7 +27,7 @@ public class HttpKeyValueStorageNodeClient implements KeyValueStorageNodeClient 
 
     @Override
     public void upsert(String key, byte[] value) throws IOException {
-        HttpEntity<byte[]> requestEntity = value.length == 0 ?
+        HttpEntity<byte[]> requestEntity = value == null || value.length == 0 ?
                     new HttpEntity<>(headers) : new HttpEntity<>(value, headers);
         ResponseEntity<Void> responseEntity =
                 rest.postForEntity(baseUrl + "/upsert/" + key, requestEntity, Void.class);

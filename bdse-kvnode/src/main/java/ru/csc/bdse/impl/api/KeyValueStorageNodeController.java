@@ -27,7 +27,7 @@ public class KeyValueStorageNodeController {
 
     @RequestMapping(method = RequestMethod.POST, value = "/upsert/{key}")
     public void upsert(@PathVariable String key,
-                       @RequestBody byte[] value) throws Exception {
+                       @RequestBody(required = false) byte[] value) throws Exception {
         node.upsert(key, value);
     }
 

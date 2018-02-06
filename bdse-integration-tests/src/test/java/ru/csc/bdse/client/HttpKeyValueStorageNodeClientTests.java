@@ -1,8 +1,6 @@
 package ru.csc.bdse.client;
 
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.client.HttpServerErrorException;
 import org.testcontainers.containers.GenericContainer;
@@ -26,8 +24,8 @@ import static org.junit.Assert.fail;
  */
 public class HttpKeyValueStorageNodeClientTests {
 
-    @Rule
-    public GenericContainer node = new GenericContainer(
+    @ClassRule
+    public static final GenericContainer node = new GenericContainer(
             new ImageFromDockerfile()
                     .withFileFromFile("target/bdse-kvnode-0.0.1-SNAPSHOT.jar", new File
                             ("../bdse-kvnode/target/bdse-kvnode-0.0.1-SNAPSHOT.jar"))
@@ -36,13 +34,8 @@ public class HttpKeyValueStorageNodeClientTests {
             .withExposedPorts(8080)
             .withStartupTimeout(Duration.of(20, SECONDS));
 
-    private HttpKeyValueStorageNodeClient client;
-
-    @Before
-    public void before() {
-        client = new HttpKeyValueStorageNodeClient("http://localhost:" + node.getMappedPort(8080));
-    }
-
+    private HttpKeyValueStorageNodeClient client =
+            new HttpKeyValueStorageNodeClient("http://localhost:" + node.getMappedPort(8080));
 
     @Test
     public void presentsKeysOnStart() throws IOException {
@@ -65,10 +58,14 @@ public class HttpKeyValueStorageNodeClientTests {
 
         client.upsert("B", "bb".getBytes());
         client.upsert("CDEffffffffff", "".getBytes());
+        client.upsert("G", null);
 
-        assertThat(client.keys(Optional.empty()).length).isEqualTo(3);
+        assertThat(client.keys(Optional.empty()).length).isEqualTo(2);
         assertThat(client.get("A").map(String::new)).isEqualTo(Optional.of("aaaa"));
-        assertThat(client.get("B").map(String::new)).isEqualTo(Optional.of("aaaa"));
+        assertThat(client.get("B").map(String::new)).isEqualTo(Optional.of("bb"));
+        assertThat(client.get("CDEffffffffff").map(String::new)).isEqualTo(Optional.empty());
+        assertThat(client.get("G").map(String::new)).isEqualTo(Optional.empty());
+        assertThat(client.keys(Optional.of("G"))).isEmpty();
     }
 
     @Test
