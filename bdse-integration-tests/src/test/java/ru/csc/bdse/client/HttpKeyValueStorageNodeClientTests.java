@@ -48,7 +48,7 @@ public class HttpKeyValueStorageNodeClientTests {
 
     @Test
     public void writeAndRead() throws IOException {
-        client.upsert("A", "aaaa".getBytes());
+        client.put("A", "aaaa".getBytes());
         assertThat(client.keys(Optional.empty())).isNotEmpty();
         assertThat(client.keys(Optional.of("A"))).isNotEmpty();
         assertThat(client.keys(Optional.of("B"))).isEmpty();
@@ -56,9 +56,9 @@ public class HttpKeyValueStorageNodeClientTests {
         assertThat(client.get("A").map(String::new)).isEqualTo(Optional.of("aaaa"));
         assertThat(client.get("B").isPresent()).isFalse();
 
-        client.upsert("B", "bb".getBytes());
-        client.upsert("CDEffffffffff", "".getBytes());
-        client.upsert("G", null);
+        client.put("B", "bb".getBytes());
+        client.put("CDEffffffffff", "".getBytes());
+        client.put("G", null);
 
         assertThat(client.keys(Optional.empty()).length).isEqualTo(2);
         assertThat(client.get("A").map(String::new)).isEqualTo(Optional.of("aaaa"));
@@ -70,10 +70,10 @@ public class HttpKeyValueStorageNodeClientTests {
 
     @Test
     public void maintenance() throws IOException {
-        assertThat(client.status()).isEqualTo("{node-0=up}");
+        assertThat(client.status()).isEqualTo("{node-0=UP}");
         assertThat(client.keys(Optional.empty())).isEmpty();
-        client.command("node-0", "down");
-        assertThat(client.status()).isEqualTo("{node-0=down}");
+        client.action("node-0", "DOWN");
+        assertThat(client.status()).isEqualTo("{node-0=DOWN}");
 
         try {
             client.keys(Optional.empty());
@@ -90,15 +90,15 @@ public class HttpKeyValueStorageNodeClientTests {
                 throw e;
         }
         try {
-            client.upsert("A", "".getBytes());
+            client.put("A", "".getBytes());
             fail("Expected an HttpServerErrorException to be thrown");
         } catch (HttpServerErrorException e) {
             if (e.getStatusCode() != HttpStatus.INTERNAL_SERVER_ERROR)
                 throw e;
         }
 
-        client.command("node-0", "UP");
-        assertThat(client.status()).isEqualTo("{node-0=up}");
+        client.action("node-0", "UP");
+        assertThat(client.status()).isEqualTo("{node-0=UP}");
         assertThat(client.keys(Optional.empty())).isEmpty();
     }
 

@@ -2,17 +2,14 @@ package ru.csc.bdse.impl.api;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import ru.csc.bdse.model.kv.KeyValue;
+import ru.csc.bdse.model.kv.Action;
 import ru.csc.bdse.model.kv.KeyValueStorageNode;
 
-import java.io.IOException;
-import java.io.PrintStream;
 import java.util.NoSuchElementException;
 import java.util.Optional;
-import java.util.Properties;
 
 /**
- * Provide HTTP API for [[KeyValueStorageNode]]
+ * Provides HTTP API for [[KeyValueStorageNode]]
  *
  * @author alesavin
  */
@@ -25,10 +22,10 @@ public class KeyValueStorageNodeController {
         this.node = node;
     }
 
-    @RequestMapping(method = RequestMethod.POST, value = "/upsert/{key}")
-    public void upsert(@PathVariable String key,
-                       @RequestBody(required = false) byte[] value) throws Exception {
-        node.upsert(key, value);
+    @RequestMapping(method = RequestMethod.POST, value = "/put/{key}")
+    public void put(@PathVariable String key,
+                    @RequestBody(required = false) byte[] value) throws Exception {
+        node.put(key, value);
     }
 
     @RequestMapping(method = RequestMethod.GET, value = "/get/{key}")
@@ -58,10 +55,10 @@ public class KeyValueStorageNodeController {
         return node.status().toString();
     }
 
-    @RequestMapping(method = RequestMethod.POST, value = "/command/{node}/{command}")
-    public void down(@PathVariable String node,
-                     @PathVariable String command) throws Exception {
-        this.node.command(node, command);
+    @RequestMapping(method = RequestMethod.POST, value = "/action/{node}/{action}")
+    public void action(@PathVariable String node,
+                       @PathVariable String action) throws Exception {
+        this.node.action(node, Action.valueOf(action));
     }
 
     @ExceptionHandler(NoSuchElementException.class)

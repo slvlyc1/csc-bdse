@@ -20,7 +20,7 @@ public class Application {
     KeyValueStorageNode node() {
 		String nodeName = System.getenv("KVNODE_NAME");
 		if (nodeName == null)
-			nodeName = "kvnode-" + UUID.randomUUID().toString();
+			nodeName = "kvnode-" + UUID.randomUUID().toString().substring(0, 4);
 	    return new InMemoryKeyValueStorageNode(nodeName);
     }
 }

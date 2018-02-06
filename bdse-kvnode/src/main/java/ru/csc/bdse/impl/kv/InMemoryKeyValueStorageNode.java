@@ -1,5 +1,6 @@
 package ru.csc.bdse.impl.kv;
 
+import ru.csc.bdse.model.kv.Action;
 import ru.csc.bdse.model.kv.KeyValueStorageNode;
 
 import java.io.IOException;
@@ -25,7 +26,7 @@ public class InMemoryKeyValueStorageNode implements KeyValueStorageNode {
     }
 
     @Override
-    public void upsert(String key, byte[] value) throws Exception {
+    public void put(String key, byte[] value) throws Exception {
         wrapIsShutdown(() -> {
             if (value == null)
                 return map.remove(key);
@@ -47,21 +48,21 @@ public class InMemoryKeyValueStorageNode implements KeyValueStorageNode {
     @Override
     public Properties status() {
         final Properties properties = new Properties();
-        properties.setProperty(name, isDown ? "down" : "up");
+        properties.setProperty(name, isDown ? Action.DOWN.toString() : Action.UP.toString());
         return properties;
     }
 
     @Override
-    public void command(String node, String command) {
-        switch (command.toLowerCase()) {
-            case "down":
+    public void action(String node, Action action) {
+        switch (action) {
+            case DOWN:
                 if (name.equals(node) && !isDown) isDown = true;
                 break;
-            case "up":
+            case UP:
                 if (name.equals(node) && isDown) isDown = false;
                 break;
             default:
-                throw new IllegalArgumentException("Invalid command [" + command + "] for node " + node);
+                throw new IllegalArgumentException("Invalid action [" + action + "] for node " + node);
         }
     }
 
