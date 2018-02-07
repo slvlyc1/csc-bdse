@@ -6,6 +6,8 @@ import ru.csc.bdse.model.kv.KeyValueStorageNode;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -18,7 +20,7 @@ public class InMemoryKeyValueStorageNode implements KeyValueStorageNode {
 
     private final String name;
 
-    private Map<String, byte[]> map = new HashMap<>();
+    private ConcurrentMap<String, byte[]> map = new ConcurrentHashMap<>();
     private boolean isDown = false;
 
     public InMemoryKeyValueStorageNode(String name) {
@@ -28,6 +30,8 @@ public class InMemoryKeyValueStorageNode implements KeyValueStorageNode {
     @Override
     public void put(String key, byte[] value) throws Exception {
         wrapIsShutdown(() -> {
+            Objects.requireNonNull(key, "null key");
+
             if (value == null)
                 return map.remove(key);
             else
@@ -36,13 +40,21 @@ public class InMemoryKeyValueStorageNode implements KeyValueStorageNode {
     }
 
     @Override
-    public byte[] get(String key) throws Exception {
-        return wrapIsShutdown(() -> map.get(key));
+    public Optional<byte[]> get(String key) throws Exception {
+        return wrapIsShutdown(() -> {
+            Objects.requireNonNull(key, "null key");
+
+            return Optional.ofNullable(map.get(key));
+        });
     }
 
     @Override
     public Set<String> keys(Predicate<String> predicate) throws Exception {
-        return wrapIsShutdown(() -> map.keySet().stream().filter(predicate).collect(Collectors.toSet()));
+        return wrapIsShutdown(() -> {
+            Objects.requireNonNull(predicate, "null predicate");
+
+            return map.keySet().stream().filter(predicate).collect(Collectors.toSet());
+        });
     }
 
     @Override
