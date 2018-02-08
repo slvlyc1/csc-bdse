@@ -30,10 +30,8 @@ public class KeyValueStorageNodeController {
 
     @RequestMapping(method = RequestMethod.GET, value = "/get/{key}")
     public byte[] get(@PathVariable String key) throws Exception {
-        byte[] value = node.get(key);
-        if (value == null)
-            throw new NoSuchElementException(key);
-        return value;
+        return node.get(key)
+                .orElseThrow(() -> new NoSuchElementException(key));
     }
 
     @RequestMapping(method = RequestMethod.GET, value = "/keys")
