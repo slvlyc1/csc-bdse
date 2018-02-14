@@ -34,4 +34,6 @@ public interface KeyValueApi {
      * Returns info about all nodes in the cluster.
      */
     ClusterInfo getClusterInfo();
+
+    // TODO: add method for turn-off and turn-on nodes (or for do some abstract command)
 }
