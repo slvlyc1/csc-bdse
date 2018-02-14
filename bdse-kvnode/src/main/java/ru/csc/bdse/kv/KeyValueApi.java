@@ -1,6 +1,9 @@
-package ru.csc.bdse.model.kv;
+package ru.csc.bdse.kv;
+
+import ru.csc.bdse.proto.ClusterInfo;
 
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * @author semkagtn
@@ -17,12 +20,18 @@ public interface KeyValueApi {
      */
     Optional<byte[]> get(String key);
 
+    /**
+     * Returns all keys with specified prefix.
+     */
+    Set<String> getKeys(String prefix);
+
      /**
      * Deletes value associated with specified key from the storage.
      */
     void delete(String key);
 
-    // TODO getInfo
-
-    // TODO turnOn/turnOff
+    /**
+     * Returns info about all nodes in the cluster.
+     */
+    ClusterInfo getClusterInfo();
 }

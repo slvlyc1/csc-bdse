@@ -2,11 +2,15 @@ package ru.csc.bdse.client;
 
 import org.assertj.core.api.SoftAssertions;
 import org.junit.Test;
-import ru.csc.bdse.model.kv.KeyValueApi;
+import ru.csc.bdse.kv.KeyValueApi;
+import ru.csc.bdse.proto.ClusterInfo;
 import ru.csc.bdse.util.Constants;
 import ru.csc.bdse.util.Random;
 
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
 
@@ -84,6 +88,45 @@ public abstract class AbstractKeyValueApiTest {
         api.delete(nonexistentKey);
         Optional<byte[]> actualNewValue = api.get(nonexistentKey);
         softAssert.assertThat(actualNewValue.isPresent()).as("new value").isFalse();
+
+        softAssert.assertAll();
+    }
+
+    @Test
+    public void getClusterInfoValue() {
+        SoftAssertions softAssert = new SoftAssertions();
+
+        ClusterInfo clusterInfo = api.getClusterInfo();
+        softAssert.assertThat(clusterInfo.getNodesList()).hasSize(1);
+
+        softAssert.assertAll();
+    }
+
+    @Test
+    public void getKeysByPrefix() {
+        SoftAssertions softAssert = new SoftAssertions();
+
+        String prefix1 = "prefix1";
+        String key1 = prefix1 + Random.nextKey();
+        String key2 = prefix1 + Random.nextKey();
+        Set<String> prefix1Keys = new HashSet<>();
+        prefix1Keys.add(key1);
+        prefix1Keys.add(key2);
+
+        String prefix2 = "prefix2";
+        String key3 = prefix2 + Random.nextKey();
+        Set<String> prefix2Keys = Collections.singleton(key3);
+        byte[] value = Random.nextValue();
+
+        api.put(key1, value);
+        api.put(key2, value);
+        api.put(key3, value);
+
+        Set<String> actualPrefix1Keys = api.getKeys(prefix1);
+        softAssert.assertThat(actualPrefix1Keys).as("prefix1").isEqualTo(prefix1Keys);
+
+        Set<String> actualPrefix2Keys = api.getKeys(prefix2);
+        softAssert.assertThat(actualPrefix2Keys).as("prefix2").isEqualTo(prefix2Keys);
 
         softAssert.assertAll();
     }

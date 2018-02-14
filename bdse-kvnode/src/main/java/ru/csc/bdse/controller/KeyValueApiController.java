@@ -1,8 +1,9 @@
-package ru.csc.bdse.impl.api;
+package ru.csc.bdse.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import ru.csc.bdse.model.kv.KeyValueApi;
+import ru.csc.bdse.kv.KeyValueApi;
+import ru.csc.bdse.util.Serializing;
 
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -33,9 +34,19 @@ public class KeyValueApiController {
                 .orElseThrow(() -> new NoSuchElementException(key));
     }
 
+    @RequestMapping(method = RequestMethod.GET, value = "/key-value")
+    public byte[] getKeys(@RequestParam("prefix") String prefix) {
+        return Serializing.serializeStringSet(keyValueApi.getKeys(prefix));
+    }
+
     @RequestMapping(method = RequestMethod.DELETE, value = "/key-value/{key}")
     public void delete(@PathVariable final String key) {
         keyValueApi.delete(key);
+    }
+
+    @RequestMapping(method = RequestMethod.GET, value = "/cluster-info")
+    public byte[] getClusterInfo() {
+        return keyValueApi.getClusterInfo().toByteArray();
     }
 
     @ExceptionHandler(NoSuchElementException.class)
