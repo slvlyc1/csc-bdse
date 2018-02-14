@@ -8,7 +8,7 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 
 /**
- * Provides HTTP API for the storage uni.t
+ * Provides HTTP API for the storage unit
  *
  * @author semkagtn
  */

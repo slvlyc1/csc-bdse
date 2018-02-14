@@ -9,7 +9,7 @@ public class Random {
 
     }
 
-    private static java.util.Random random = new java.util.Random();
+    private static final java.util.Random random = new java.util.Random();
 
     public static String nextKey() {
         return String.valueOf(random.nextLong());

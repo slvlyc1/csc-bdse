@@ -5,6 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import ru.csc.bdse.impl.kv.InMemoryKeyValueApi;
 import ru.csc.bdse.model.kv.KeyValueApi;
+import ru.csc.bdse.util.Env;
 
 import java.util.UUID;
 
@@ -21,9 +22,7 @@ public class Application {
 
     @Bean
     KeyValueApi node() {
-        String nodeName = System.getenv("KVNODE_NAME");
-        if (nodeName == null)
-            nodeName = randomNodeName();
+        String nodeName = Env.get(EnvVariables.KVNODE_NAME).orElse(randomNodeName());
         return new InMemoryKeyValueApi(nodeName);
     }
 }

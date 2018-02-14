@@ -13,6 +13,8 @@ import ru.csc.bdse.util.Require;
 import java.util.Optional;
 
 /**
+ * Http client for storage unit.
+ *
  * @author semkagtn
  */
 public class KeyValueApiHttpClient implements KeyValueApi {
@@ -21,6 +23,7 @@ public class KeyValueApiHttpClient implements KeyValueApi {
     private final RestTemplate rest = new RestTemplate();
 
     public KeyValueApiHttpClient(final String baseUrl) {
+        Require.nonEmpty(baseUrl, "empty base url");
         this.baseUrl = baseUrl;
     }
 
