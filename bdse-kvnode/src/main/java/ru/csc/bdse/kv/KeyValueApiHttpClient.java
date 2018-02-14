@@ -1,20 +1,20 @@
-package ru.csc.bdse.impl.kv;
+package ru.csc.bdse.kv;
 
-import com.google.protobuf.InvalidProtocolBufferException;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
-import ru.csc.bdse.model.kv.KeyValueApi;
+import ru.csc.bdse.kv.KeyValueApi;
 import ru.csc.bdse.proto.ClusterInfo;
-import ru.csc.bdse.proto.NodeInfo;
-import ru.csc.bdse.proto.NodeStatus;
 import ru.csc.bdse.util.Constants;
+import ru.csc.bdse.util.Encoding;
+import ru.csc.bdse.util.Serializing;
 import ru.csc.bdse.util.Require;
 
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Http client for storage unit.
@@ -39,7 +39,7 @@ public class KeyValueApiHttpClient implements KeyValueApi {
         final String url = baseUrl + "/key-value/" + key;
         final ResponseEntity<byte[]> responseEntity = request(url, HttpMethod.PUT, value);
         if (responseEntity.getStatusCode() != HttpStatus.OK) {
-            throw new RuntimeException("Request error: " + responseEntity);
+            throw new RuntimeException("Response error: " + responseEntity);
         }
     }
 
@@ -55,8 +55,20 @@ public class KeyValueApiHttpClient implements KeyValueApi {
             case NOT_FOUND:
                 return Optional.empty();
             default:
-                throw new RuntimeException("Request error: " + responseEntity);
+                throw new RuntimeException("Response error: " + responseEntity);
         }
+    }
+
+    @Override
+    public Set<String> getKeys(String prefix) {
+        Require.nonNull(prefix, "null prefix");
+
+        final String url = baseUrl + "/key-value?prefix=" + Encoding.encodeUrl(prefix);
+        final ResponseEntity<byte[]> responseEntity = request(url, HttpMethod.GET, Constants.EMPTY_BYTE_ARRAY);
+        if (responseEntity.getStatusCode() != HttpStatus.OK) {
+            throw new RuntimeException("Response error: " + responseEntity);
+        }
+        return Serializing.deserializeStringSet(responseEntity.getBody());
     }
 
     @Override
@@ -66,7 +78,7 @@ public class KeyValueApiHttpClient implements KeyValueApi {
         final String url = baseUrl + "/key-value/" + key;
         final ResponseEntity<byte[]> responseEntity = request(url, HttpMethod.DELETE, Constants.EMPTY_BYTE_ARRAY);
         if (responseEntity.getStatusCode() != HttpStatus.OK) {
-            throw new RuntimeException("Request error: " + responseEntity);
+            throw new RuntimeException("Response error: " + responseEntity);
         }
     }
 
@@ -75,13 +87,9 @@ public class KeyValueApiHttpClient implements KeyValueApi {
         final String url = baseUrl + "/cluster-info";
         final ResponseEntity<byte[]> responseEntity = request(url, HttpMethod.GET, Constants.EMPTY_BYTE_ARRAY);
         if (responseEntity.getStatusCode() != HttpStatus.OK) {
-            throw new RuntimeException("Request error: " + responseEntity);
+            throw new RuntimeException("Response error: " + responseEntity);
         }
-        try {
-            return ClusterInfo.parseFrom(responseEntity.getBody());
-        } catch (InvalidProtocolBufferException e) {
-            throw new RuntimeException(e);
-        }
+        return Serializing.deserializeClusterInfo(responseEntity.getBody());
     }
 
     private ResponseEntity<byte[]> request(final String url,

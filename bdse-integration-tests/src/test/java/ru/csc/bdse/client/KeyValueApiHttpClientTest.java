@@ -3,8 +3,8 @@ package ru.csc.bdse.client;
 import org.junit.ClassRule;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.images.builder.ImageFromDockerfile;
-import ru.csc.bdse.impl.kv.KeyValueApiHttpClient;
-import ru.csc.bdse.model.kv.KeyValueApi;
+import ru.csc.bdse.kv.KeyValueApiHttpClient;
+import ru.csc.bdse.kv.KeyValueApi;
 
 import java.io.File;
 import java.time.Duration;

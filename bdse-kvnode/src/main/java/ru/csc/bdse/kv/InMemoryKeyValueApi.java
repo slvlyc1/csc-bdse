@@ -1,15 +1,16 @@
-package ru.csc.bdse.impl.kv;
+package ru.csc.bdse.kv;
 
 import ru.csc.bdse.proto.ClusterInfo;
 import ru.csc.bdse.proto.NodeInfo;
 import ru.csc.bdse.proto.NodeStatus;
 import ru.csc.bdse.util.Require;
-import ru.csc.bdse.model.kv.KeyValueApi;
+import ru.csc.bdse.kv.KeyValueApi;
 
-import java.util.Collections;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.stream.Collectors;
 
 /**
  * Trivial in-memory implementation of the storage unit.
@@ -37,6 +38,15 @@ public class InMemoryKeyValueApi implements KeyValueApi {
     public Optional<byte[]> get(final String key) {
         Require.nonEmpty(key, "empty key");
         return Optional.ofNullable(map.get(key));
+    }
+
+    @Override
+    public Set<String> getKeys(String prefix) {
+        Require.nonNull(prefix, "null prefix");
+        return map.keySet()
+                .stream()
+                .filter(key -> key.startsWith(prefix))
+                .collect(Collectors.toSet());
     }
 
     @Override

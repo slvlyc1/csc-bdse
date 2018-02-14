@@ -1,7 +1,7 @@
 package ru.csc.bdse.client;
 
-import ru.csc.bdse.impl.kv.InMemoryKeyValueApi;
-import ru.csc.bdse.model.kv.KeyValueApi;
+import ru.csc.bdse.kv.InMemoryKeyValueApi;
+import ru.csc.bdse.kv.KeyValueApi;
 
 /**
  * @author semkagtn

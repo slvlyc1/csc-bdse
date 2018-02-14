@@ -18,3 +18,7 @@ enum NodeStatus {
     UP = 0;
     DOWN = 1;
 }
+
+message StringList {
+    repeated string values = 1;
+}
