@@ -2,8 +2,6 @@ package ru.csc.bdse.kv;
 
 import org.assertj.core.api.SoftAssertions;
 import org.junit.Test;
-import ru.csc.bdse.kv.KeyValueApi;
-import ru.csc.bdse.proto.ClusterInfo;
 import ru.csc.bdse.util.Constants;
 import ru.csc.bdse.util.Random;
 
@@ -96,8 +94,9 @@ public abstract class AbstractKeyValueApiTest {
     public void getClusterInfoValue() {
         SoftAssertions softAssert = new SoftAssertions();
 
-        ClusterInfo clusterInfo = api.getClusterInfo();
-        softAssert.assertThat(clusterInfo.getNodesList()).hasSize(1);
+        Set<NodeInfo> info = api.getInfo();
+        softAssert.assertThat(info).hasSize(1);
+        softAssert.assertThat(info.iterator().next().getStatus()).isEqualTo(NodeStatus.UP);
 
         softAssert.assertAll();
     }

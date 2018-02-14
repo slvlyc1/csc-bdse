@@ -3,10 +3,12 @@ package ru.csc.bdse.controller;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.csc.bdse.kv.KeyValueApi;
-import ru.csc.bdse.util.Serializing;
+import ru.csc.bdse.kv.NodeAction;
+import ru.csc.bdse.kv.NodeInfo;
 
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Provides HTTP API for the storage unit
@@ -35,8 +37,8 @@ public class KeyValueApiController {
     }
 
     @RequestMapping(method = RequestMethod.GET, value = "/key-value")
-    public byte[] getKeys(@RequestParam("prefix") String prefix) {
-        return Serializing.serializeStringSet(keyValueApi.getKeys(prefix));
+    public Set<String> getKeys(@RequestParam("prefix") String prefix) {
+        return keyValueApi.getKeys(prefix);
     }
 
     @RequestMapping(method = RequestMethod.DELETE, value = "/key-value/{key}")
@@ -44,10 +46,14 @@ public class KeyValueApiController {
         keyValueApi.delete(key);
     }
 
-    @RequestMapping(method = RequestMethod.GET, value = "/cluster-info")
-    public byte[] getClusterInfo() {
-        return keyValueApi.getClusterInfo().toByteArray();
+    @RequestMapping(method = RequestMethod.GET, value = "/info")
+    public Set<NodeInfo> getInfo() {
+        return keyValueApi.getInfo();
     }
+
+    @RequestMapping(method = RequestMethod.POST, value = "/action/{node}/{action}")
+    public void action(@PathVariable final String node,
+                       @PathVariable final NodeAction action) { keyValueApi.action(node, action); }
 
     @ExceptionHandler(NoSuchElementException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)

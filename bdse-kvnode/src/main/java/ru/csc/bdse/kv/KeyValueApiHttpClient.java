@@ -5,16 +5,14 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
-import ru.csc.bdse.kv.KeyValueApi;
-import ru.csc.bdse.proto.ClusterInfo;
 import ru.csc.bdse.util.Constants;
 import ru.csc.bdse.util.Encoding;
-import ru.csc.bdse.util.Serializing;
 import ru.csc.bdse.util.Require;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Http client for storage unit.
@@ -64,11 +62,11 @@ public class KeyValueApiHttpClient implements KeyValueApi {
         Require.nonNull(prefix, "null prefix");
 
         final String url = baseUrl + "/key-value?prefix=" + Encoding.encodeUrl(prefix);
-        final ResponseEntity<byte[]> responseEntity = request(url, HttpMethod.GET, Constants.EMPTY_BYTE_ARRAY);
-        if (responseEntity.getStatusCode() != HttpStatus.OK) {
-            throw new RuntimeException("Response error: " + responseEntity);
+        try {
+            return new HashSet<>(Arrays.asList(rest.getForObject(url, String[].class)));
+        } catch (RestClientException e) {
+            throw new RuntimeException("Response error: " + e.getMessage());
         }
-        return Serializing.deserializeStringSet(responseEntity.getBody());
     }
 
     @Override
@@ -83,13 +81,18 @@ public class KeyValueApiHttpClient implements KeyValueApi {
     }
 
     @Override
-    public ClusterInfo getClusterInfo() {
-        final String url = baseUrl + "/cluster-info";
-        final ResponseEntity<byte[]> responseEntity = request(url, HttpMethod.GET, Constants.EMPTY_BYTE_ARRAY);
-        if (responseEntity.getStatusCode() != HttpStatus.OK) {
-            throw new RuntimeException("Response error: " + responseEntity);
+    public Set<NodeInfo> getInfo() {
+        final String url = baseUrl + "/info";
+        try {
+            return new HashSet<>(Arrays.asList(rest.getForObject(url, NodeInfo[].class)));
+        } catch (RestClientException e) {
+            throw new RuntimeException("Response error: " + e.getMessage());
         }
-        return Serializing.deserializeClusterInfo(responseEntity.getBody());
+    }
+
+    @Override
+    public void action(String node, NodeAction action) {
+        throw new NotImplementedException();
     }
 
     private ResponseEntity<byte[]> request(final String url,
