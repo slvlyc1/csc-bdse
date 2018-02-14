@@ -1,4 +1,4 @@
-package ru.csc.bdse.client;
+package ru.csc.bdse.kv;
 
 import org.assertj.core.api.SoftAssertions;
 import org.junit.Test;

@@ -1,10 +1,8 @@
-package ru.csc.bdse.client;
+package ru.csc.bdse.kv;
 
 import org.junit.ClassRule;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.images.builder.ImageFromDockerfile;
-import ru.csc.bdse.kv.KeyValueApiHttpClient;
-import ru.csc.bdse.kv.KeyValueApi;
 import ru.csc.bdse.util.Env;
 
 import java.io.File;

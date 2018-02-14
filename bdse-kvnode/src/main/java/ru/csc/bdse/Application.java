@@ -22,7 +22,7 @@ public class Application {
 
     @Bean
     KeyValueApi node() {
-        String nodeName = Env.get(Env.KVNODE_NAME).orElse(randomNodeName());
+        String nodeName = Env.get(Env.KVNODE_NAME).orElseGet(Application::randomNodeName);
         return new InMemoryKeyValueApi(nodeName);
     }
 }
