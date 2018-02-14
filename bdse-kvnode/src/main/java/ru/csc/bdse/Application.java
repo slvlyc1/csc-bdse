@@ -3,8 +3,8 @@ package ru.csc.bdse;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
-import ru.csc.bdse.impl.kv.InMemoryKeyValueStorageNode;
-import ru.csc.bdse.model.kv.KeyValueStorageNode;
+import ru.csc.bdse.impl.kv.InMemoryKeyValueApi;
+import ru.csc.bdse.model.kv.KeyValueApi;
 
 import java.util.UUID;
 
@@ -20,10 +20,10 @@ public class Application {
     }
 
     @Bean
-    KeyValueStorageNode node() {
+    KeyValueApi node() {
         String nodeName = System.getenv("KVNODE_NAME");
         if (nodeName == null)
             nodeName = randomNodeName();
-        return new InMemoryKeyValueStorageNode(nodeName);
+        return new InMemoryKeyValueApi(nodeName);
     }
 }
