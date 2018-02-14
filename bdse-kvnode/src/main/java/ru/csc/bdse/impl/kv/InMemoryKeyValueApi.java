@@ -1,7 +1,12 @@
 package ru.csc.bdse.impl.kv;
 
+import ru.csc.bdse.proto.ClusterInfo;
+import ru.csc.bdse.proto.NodeInfo;
+import ru.csc.bdse.proto.NodeStatus;
 import ru.csc.bdse.util.Require;
 import ru.csc.bdse.model.kv.KeyValueApi;
+
+import java.util.Collections;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -38,5 +43,14 @@ public class InMemoryKeyValueApi implements KeyValueApi {
     public void delete(final String key) {
         Require.nonEmpty(key, "empty key");
         map.remove(key);
+    }
+
+    @Override
+    public ClusterInfo getClusterInfo() {
+        return ClusterInfo.newBuilder()
+                .addNodes(NodeInfo.newBuilder()
+                        .setName(name)
+                        .setStatus(NodeStatus.UP))
+                .build();
     }
 }

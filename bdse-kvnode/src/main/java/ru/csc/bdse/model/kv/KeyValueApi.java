@@ -1,5 +1,7 @@
 package ru.csc.bdse.model.kv;
 
+import ru.csc.bdse.proto.ClusterInfo;
+
 import java.util.Optional;
 
 /**
@@ -22,7 +24,8 @@ public interface KeyValueApi {
      */
     void delete(String key);
 
-    // TODO getInfo
-
-    // TODO turnOn/turnOff
+    /**
+     * Returns info about all nodes in the cluster.
+     */
+    ClusterInfo getClusterInfo();
 }

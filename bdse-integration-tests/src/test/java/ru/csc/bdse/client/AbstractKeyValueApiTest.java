@@ -3,6 +3,7 @@ package ru.csc.bdse.client;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.Test;
 import ru.csc.bdse.model.kv.KeyValueApi;
+import ru.csc.bdse.proto.ClusterInfo;
 import ru.csc.bdse.util.Constants;
 import ru.csc.bdse.util.Random;
 
@@ -86,5 +87,15 @@ public abstract class AbstractKeyValueApiTest {
         softAssert.assertThat(actualNewValue.isPresent()).as("new value").isFalse();
 
         softAssert.assertAll();
+    }
+
+    @Test
+    public void getClusterInfoValue() {
+        SoftAssertions softAssertions = new SoftAssertions();
+
+        ClusterInfo clusterInfo = api.getClusterInfo();
+        softAssertions.assertThat(clusterInfo.getNodesList()).hasSize(1);
+
+        softAssertions.assertAll();
     }
 }

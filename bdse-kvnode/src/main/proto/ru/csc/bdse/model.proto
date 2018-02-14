@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package ru.csc.bdse;
+
+option java_package = "ru.csc.bdse.proto";
+option java_multiple_files = true;
+
+message ClusterInfo {
+    repeated NodeInfo nodes = 1;
+}
+
+message NodeInfo {
+    string name = 1;
+    NodeStatus status = 2;
+}
+
+enum NodeStatus {
+    UP = 0;
+    DOWN = 1;
+}

@@ -3,6 +3,7 @@ package ru.csc.bdse.impl.api;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.csc.bdse.model.kv.KeyValueApi;
+import ru.csc.bdse.proto.ClusterInfo;
 
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -36,6 +37,11 @@ public class KeyValueApiController {
     @RequestMapping(method = RequestMethod.DELETE, value = "/key-value/{key}")
     public void delete(@PathVariable final String key) {
         keyValueApi.delete(key);
+    }
+
+    @RequestMapping(method = RequestMethod.GET, value = "/cluster-info")
+    public byte[] getClusterInfo() {
+        return keyValueApi.getClusterInfo().toByteArray();
     }
 
     @ExceptionHandler(NoSuchElementException.class)

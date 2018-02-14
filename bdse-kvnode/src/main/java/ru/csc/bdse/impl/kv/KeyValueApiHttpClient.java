@@ -1,5 +1,6 @@
 package ru.csc.bdse.impl.kv;
 
+import com.google.protobuf.InvalidProtocolBufferException;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -7,6 +8,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import ru.csc.bdse.model.kv.KeyValueApi;
+import ru.csc.bdse.proto.ClusterInfo;
+import ru.csc.bdse.proto.NodeInfo;
+import ru.csc.bdse.proto.NodeStatus;
 import ru.csc.bdse.util.Constants;
 import ru.csc.bdse.util.Require;
 
@@ -63,6 +67,20 @@ public class KeyValueApiHttpClient implements KeyValueApi {
         final ResponseEntity<byte[]> responseEntity = request(url, HttpMethod.DELETE, Constants.EMPTY_BYTE_ARRAY);
         if (responseEntity.getStatusCode() != HttpStatus.OK) {
             throw new RuntimeException("Request error: " + responseEntity);
+        }
+    }
+
+    @Override
+    public ClusterInfo getClusterInfo() {
+        final String url = baseUrl + "/cluster-info";
+        final ResponseEntity<byte[]> responseEntity = request(url, HttpMethod.GET, Constants.EMPTY_BYTE_ARRAY);
+        if (responseEntity.getStatusCode() != HttpStatus.OK) {
+            throw new RuntimeException("Request error: " + responseEntity);
+        }
+        try {
+            return ClusterInfo.parseFrom(responseEntity.getBody());
+        } catch (InvalidProtocolBufferException e) {
+            throw new RuntimeException(e);
         }
     }
 
