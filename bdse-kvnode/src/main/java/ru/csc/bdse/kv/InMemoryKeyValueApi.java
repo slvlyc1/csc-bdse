@@ -1,7 +1,6 @@
 package ru.csc.bdse.kv;
 
 import ru.csc.bdse.util.Require;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.Collections;
 import java.util.Optional;
@@ -60,7 +59,7 @@ public class InMemoryKeyValueApi implements KeyValueApi {
 
     @Override
     public void action(String node, NodeAction action) {
-        throw new NotImplementedException();
+        throw new RuntimeException("action not implemented now");
     }
 
 }

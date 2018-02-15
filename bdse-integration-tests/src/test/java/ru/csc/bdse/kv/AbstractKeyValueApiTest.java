@@ -95,8 +95,8 @@ public abstract class AbstractKeyValueApiTest {
         SoftAssertions softAssert = new SoftAssertions();
 
         Set<NodeInfo> info = api.getInfo();
-        softAssert.assertThat(info).hasSize(1);
-        softAssert.assertThat(info.iterator().next().getStatus()).isEqualTo(NodeStatus.UP);
+        softAssert.assertThat(info).as("size").hasSize(1);
+        softAssert.assertThat(info.iterator().next().getStatus()).as("status").isEqualTo(NodeStatus.UP);
 
         softAssert.assertAll();
     }

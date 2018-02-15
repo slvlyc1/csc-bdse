@@ -1,18 +1,20 @@
 package ru.csc.bdse.kv;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import ru.csc.bdse.util.Constants;
 import ru.csc.bdse.util.Encoding;
 import ru.csc.bdse.util.Require;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
 
 /**
  * Http client for storage unit.
@@ -23,6 +25,7 @@ public class KeyValueApiHttpClient implements KeyValueApi {
 
     private final String baseUrl;
     private final RestTemplate rest = new RestTemplate();
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public KeyValueApiHttpClient(final String baseUrl) {
         Require.nonEmpty(baseUrl, "empty base url");
@@ -62,10 +65,11 @@ public class KeyValueApiHttpClient implements KeyValueApi {
         Require.nonNull(prefix, "null prefix");
 
         final String url = baseUrl + "/key-value?prefix=" + Encoding.encodeUrl(prefix);
-        try {
-            return new HashSet<>(Arrays.asList(rest.getForObject(url, String[].class)));
-        } catch (RestClientException e) {
-            throw new RuntimeException("Response error: " + e.getMessage());
+        final ResponseEntity<byte[]> responseEntity = request(url, HttpMethod.GET, Constants.EMPTY_BYTE_ARRAY);
+        if (responseEntity.getStatusCode() == HttpStatus.OK) {
+            return new HashSet<>(Arrays.asList(readAs(responseEntity.getBody(), String[].class)));
+        } else {
+            throw new RuntimeException("Response error: " + responseEntity);
         }
     }
 
@@ -83,16 +87,17 @@ public class KeyValueApiHttpClient implements KeyValueApi {
     @Override
     public Set<NodeInfo> getInfo() {
         final String url = baseUrl + "/info";
-        try {
-            return new HashSet<>(Arrays.asList(rest.getForObject(url, NodeInfo[].class)));
-        } catch (RestClientException e) {
-            throw new RuntimeException("Response error: " + e.getMessage());
+        final ResponseEntity<byte[]> responseEntity = request(url, HttpMethod.GET, Constants.EMPTY_BYTE_ARRAY);
+        if (responseEntity.getStatusCode() == HttpStatus.OK) {
+            return new HashSet<>(Arrays.asList(readAs(responseEntity.getBody(), NodeInfo[].class)));
+        } else {
+            throw new RuntimeException("Response error: " + responseEntity);
         }
     }
 
     @Override
     public void action(String node, NodeAction action) {
-        throw new NotImplementedException();
+        throw new RuntimeException("action not implemented now");
     }
 
     private ResponseEntity<byte[]> request(final String url,
@@ -105,4 +110,11 @@ public class KeyValueApiHttpClient implements KeyValueApi {
         }
     }
 
+    private <T> T readAs(byte[] src, Class<T> valueType) {
+        try {
+            return objectMapper.readValue(src, valueType);
+        } catch (Exception e) {
+            throw new RuntimeException("Response error: " + e.getMessage());
+        }
+    }
 }

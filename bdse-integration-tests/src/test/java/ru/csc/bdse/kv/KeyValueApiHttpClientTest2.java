@@ -36,13 +36,8 @@ public class KeyValueApiHttpClientTest2 {
     }
 
     @Test
-    public void deleteByKey() {
-        // TODO use tombstones?
-    }
-
-    @Test
     public void concurrentPuts() {
-        // TODO simultanious puts for the key value
+        // TODO simultanious puts for the same key value
     }
 
     @Test
@@ -71,7 +66,13 @@ public class KeyValueApiHttpClientTest2 {
     }
 
     @Test
+    public void deleteByTombstone() {
+        // TODO use tombstones to mark as deleted (optional)
+    }
+
+    @Test
     public void loadMillionKeys()  {
+        //TODO load too many data (optional)
     }
 }
 
