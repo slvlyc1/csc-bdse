@@ -43,7 +43,6 @@ public class NodeInfo {
 
     @Override
     public int hashCode() {
-
         return Objects.hash(name);
     }
 
