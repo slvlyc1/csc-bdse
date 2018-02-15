@@ -1,7 +1,5 @@
 package ru.csc.bdse.kv;
 
-import ru.csc.bdse.proto.ClusterInfo;
-
 import java.util.Optional;
 import java.util.Set;
 
@@ -25,15 +23,18 @@ public interface KeyValueApi {
      */
     Set<String> getKeys(String prefix);
 
-     /**
+    /**
      * Deletes value associated with specified key from the storage.
      */
     void delete(String key);
 
     /**
-     * Returns info about all nodes in the cluster.
+     * Returns info about all nodes.
      */
-    ClusterInfo getClusterInfo();
+    Set<NodeInfo> getInfo();
 
-    // TODO: add method for turn-off and turn-on nodes (or for do some abstract command)
+    /**
+     * Do action on specified node.
+     */
+    void action(String node, NodeAction action);
 }

@@ -1,11 +1,8 @@
 package ru.csc.bdse.kv;
 
-import ru.csc.bdse.proto.ClusterInfo;
-import ru.csc.bdse.proto.NodeInfo;
-import ru.csc.bdse.proto.NodeStatus;
 import ru.csc.bdse.util.Require;
-import ru.csc.bdse.kv.KeyValueApi;
 
+import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -56,11 +53,13 @@ public class InMemoryKeyValueApi implements KeyValueApi {
     }
 
     @Override
-    public ClusterInfo getClusterInfo() {
-        return ClusterInfo.newBuilder()
-                .addNodes(NodeInfo.newBuilder()
-                        .setName(name)
-                        .setStatus(NodeStatus.UP))
-                .build();
+    public Set<NodeInfo> getInfo() {
+        return Collections.singleton(new NodeInfo(name, NodeStatus.UP));
     }
+
+    @Override
+    public void action(String node, NodeAction action) {
+        throw new RuntimeException("action not implemented now");
+    }
+
 }

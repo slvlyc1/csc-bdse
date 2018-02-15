@@ -1,18 +1,18 @@
 package ru.csc.bdse.kv;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
-import ru.csc.bdse.kv.KeyValueApi;
-import ru.csc.bdse.proto.ClusterInfo;
 import ru.csc.bdse.util.Constants;
 import ru.csc.bdse.util.Encoding;
-import ru.csc.bdse.util.Serializing;
 import ru.csc.bdse.util.Require;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
@@ -25,6 +25,7 @@ public class KeyValueApiHttpClient implements KeyValueApi {
 
     private final String baseUrl;
     private final RestTemplate rest = new RestTemplate();
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public KeyValueApiHttpClient(final String baseUrl) {
         Require.nonEmpty(baseUrl, "empty base url");
@@ -65,10 +66,11 @@ public class KeyValueApiHttpClient implements KeyValueApi {
 
         final String url = baseUrl + "/key-value?prefix=" + Encoding.encodeUrl(prefix);
         final ResponseEntity<byte[]> responseEntity = request(url, HttpMethod.GET, Constants.EMPTY_BYTE_ARRAY);
-        if (responseEntity.getStatusCode() != HttpStatus.OK) {
+        if (responseEntity.getStatusCode() == HttpStatus.OK) {
+            return new HashSet<>(Arrays.asList(readAs(responseEntity.getBody(), String[].class)));
+        } else {
             throw new RuntimeException("Response error: " + responseEntity);
         }
-        return Serializing.deserializeStringSet(responseEntity.getBody());
     }
 
     @Override
@@ -83,13 +85,19 @@ public class KeyValueApiHttpClient implements KeyValueApi {
     }
 
     @Override
-    public ClusterInfo getClusterInfo() {
-        final String url = baseUrl + "/cluster-info";
+    public Set<NodeInfo> getInfo() {
+        final String url = baseUrl + "/info";
         final ResponseEntity<byte[]> responseEntity = request(url, HttpMethod.GET, Constants.EMPTY_BYTE_ARRAY);
-        if (responseEntity.getStatusCode() != HttpStatus.OK) {
+        if (responseEntity.getStatusCode() == HttpStatus.OK) {
+            return new HashSet<>(Arrays.asList(readAs(responseEntity.getBody(), NodeInfo[].class)));
+        } else {
             throw new RuntimeException("Response error: " + responseEntity);
         }
-        return Serializing.deserializeClusterInfo(responseEntity.getBody());
+    }
+
+    @Override
+    public void action(String node, NodeAction action) {
+        throw new RuntimeException("action not implemented now");
     }
 
     private ResponseEntity<byte[]> request(final String url,
@@ -102,4 +110,11 @@ public class KeyValueApiHttpClient implements KeyValueApi {
         }
     }
 
+    private <T> T readAs(byte[] src, Class<T> valueType) {
+        try {
+            return objectMapper.readValue(src, valueType);
+        } catch (Exception e) {
+            throw new RuntimeException("Response error: " + e.getMessage());
+        }
+    }
 }
