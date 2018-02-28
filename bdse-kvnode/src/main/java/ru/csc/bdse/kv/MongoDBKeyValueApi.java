@@ -9,6 +9,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import ru.csc.bdse.util.Require;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -49,7 +50,7 @@ public class MongoDBKeyValueApi implements KeyValueApi {
         Query byKey = new Query().addCriteria(Criteria.where("key").is(key));
         KeyValue result = mongoTemplate.findOne(byKey, KeyValue.class);
 
-        return Optional.ofNullable(result.getValue());
+        return Optional.ofNullable(result).map(KeyValue::getValue);
     }
 
     @Override
@@ -66,16 +67,17 @@ public class MongoDBKeyValueApi implements KeyValueApi {
 
     @Override
     public void delete(String key) {
-
+        Query query = new Query(Criteria.where("key").is(key));
+        mongoTemplate.remove(query, KeyValue.class);
     }
 
     @Override
     public Set<NodeInfo> getInfo() {
-        return null;
+        return Collections.singleton(new NodeInfo(nodeName, NodeStatus.UP));
     }
 
     @Override
     public void action(String node, NodeAction action) {
-
+        throw new RuntimeException("action not implemented now");
     }
 }
