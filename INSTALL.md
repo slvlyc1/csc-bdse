@@ -17,3 +17,6 @@
 ./mvnw --projects bdse-kvnode clean package
 ./mvnw --projects bdse-integration-tests --also-make test
 
+#Локальный запуск
+Для запуска собственно используется класс Application. Нужно чтобы была поднята MongoDb 
+(в докере, например: docker run -p 27017:27017 --name some-mongo -d mongo).
