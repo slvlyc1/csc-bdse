@@ -27,7 +27,7 @@ public class KeyValueApiHttpClient implements KeyValueApi {
     private final RestTemplate rest = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public KeyValueApiHttpClient(final String baseUrl) {
+    KeyValueApiHttpClient(final String baseUrl) {
         Require.nonEmpty(baseUrl, "empty base url");
         this.baseUrl = baseUrl;
     }
@@ -97,7 +97,11 @@ public class KeyValueApiHttpClient implements KeyValueApi {
 
     @Override
     public void action(String node, NodeAction action) {
-        throw new RuntimeException("action not implemented now");
+        final String url = String.format("%s/action/%s/%s", baseUrl, node, action);
+        final ResponseEntity<byte[]> responseEntity = request(url, HttpMethod.POST, Constants.EMPTY_BYTE_ARRAY);
+        if (responseEntity.getStatusCode() != HttpStatus.OK) {
+            throw new RuntimeException("Response error: " + responseEntity);
+        }
     }
 
     private ResponseEntity<byte[]> request(final String url,

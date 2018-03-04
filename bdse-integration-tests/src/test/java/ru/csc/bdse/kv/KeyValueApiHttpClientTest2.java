@@ -1,15 +1,21 @@
 package ru.csc.bdse.kv;
 
-import org.junit.ClassRule;
+import org.junit.BeforeClass;
 import org.junit.Test;
+import org.springframework.web.client.HttpServerErrorException;
 import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.Network;
+import org.testcontainers.images.RemoteDockerImage;
 import org.testcontainers.images.builder.ImageFromDockerfile;
 import ru.csc.bdse.util.Env;
+import ru.csc.bdse.util.Random;
 
 import java.io.File;
 import java.time.Duration;
+import java.util.stream.IntStream;
 
 import static java.time.temporal.ChronoUnit.SECONDS;
+import static org.junit.Assert.*;
 
 /**
  * Test have to be implemented
@@ -18,15 +24,36 @@ import static java.time.temporal.ChronoUnit.SECONDS;
  */
 public class KeyValueApiHttpClientTest2 {
 
-    @ClassRule
-    public static final GenericContainer node = new GenericContainer(
-            new ImageFromDockerfile()
-                    .withFileFromFile("target/bdse-kvnode-0.0.1-SNAPSHOT.jar", new File
-                            ("../bdse-kvnode/target/bdse-kvnode-0.0.1-SNAPSHOT.jar"))
-                    .withFileFromClasspath("Dockerfile", "kvnode/Dockerfile"))
-            .withEnv(Env.KVNODE_NAME, "node-0")
-            .withExposedPorts(8080)
-            .withStartupTimeout(Duration.of(30, SECONDS));
+    private static final int THREADS = 100;
+
+    private static GenericContainer mongo;
+    private static GenericContainer node;
+
+    @BeforeClass
+    public static void setUp() {
+        final Network network = Network.newNetwork();
+        mongo = new GenericContainer(new RemoteDockerImage("mongo", "latest"))
+                .withExposedPorts(TestEnv.MONGO_PORT)
+                .withNetwork(network)
+                .withNetworkAliases(TestEnv.MONGO_HOST)
+                .withStartupTimeout(Duration.of(30, SECONDS));
+
+        mongo.start();
+
+        node = new GenericContainer(
+                new ImageFromDockerfile()
+                        .withFileFromFile("target/bdse-kvnode-0.0.1-SNAPSHOT.jar", new File
+                                ("../bdse-kvnode/target/bdse-kvnode-0.0.1-SNAPSHOT.jar"))
+                        .withFileFromClasspath("Dockerfile", "kvnode/Dockerfile"))
+                .withEnv(Env.KVNODE_NAME, TestEnv.NODE_NAME)
+                .withEnv(Env.MONGO_HOSTNAME, TestEnv.MONGO_HOST)
+                .withEnv(Env.MONGO_PORT, String.valueOf(TestEnv.MONGO_PORT))
+                .withExposedPorts(8080)
+                .withNetwork(network)
+                .withStartupTimeout(Duration.of(30, SECONDS));
+        node.start();
+
+    }
 
     private KeyValueApi api = newKeyValueApi();
 
@@ -36,33 +63,97 @@ public class KeyValueApiHttpClientTest2 {
     }
 
     @Test
-    public void concurrentPuts() {
-        // TODO simultanious puts for the same key value
+    public void
+    concurrentPuts() {
+        api.action(TestEnv.NODE_NAME, NodeAction.UP);
+
+        final String key = "key";
+        final byte[] value = Random.nextValue();
+        final Thread[] threads = new Thread[THREADS];
+        IntStream.range(0, THREADS).forEach(i -> threads[i] = new Thread(() -> api.put(key, value)));
+        IntStream.range(0, THREADS).forEach(i -> threads[i].start());
+        IntStream.range(0, THREADS).forEach(i -> {
+            try {
+                threads[i].join();
+            } catch (InterruptedException e) {
+                System.out.println(e.toString());
+            }
+        });
+        assertTrue(api.get(key).isPresent());
+        assertArrayEquals(value, api.get(key).get());
+        api.delete(key);
     }
 
     @Test
     public void concurrentDeleteAndKeys() {
-        //TODO simultanious delete by key and keys listing
+        api.action(TestEnv.NODE_NAME, NodeAction.UP);
+
+        final String firstKey = "key_1";
+        final byte[] firstValue = Random.nextValue();
+        final String secondKey = "key_2";
+        final byte[] secondValue = Random.nextValue();
+        final Thread[] threads = new Thread[THREADS];
+
+        api.put(firstKey, firstValue);
+        api.put(secondKey, secondValue);
+
+        IntStream.range(0, THREADS).forEach(i -> threads[i] = new Thread(() -> api.delete(firstKey)));
+        IntStream.range(0, THREADS).forEach(i -> threads[i].start());
+        IntStream.range(0, THREADS).forEach(i -> {
+            try {
+                threads[i].join();
+            } catch (InterruptedException e) {
+                System.out.println(e.toString());
+            }
+        });
+
+        assertFalse(api.get(firstKey).isPresent());
+        assertTrue(api.get(secondKey).isPresent());
+        assertArrayEquals(secondValue, api.get(secondKey).get());
+
+        api.delete(firstKey);
+        api.delete(secondKey);
     }
 
     @Test
     public void actionUpDown() {
-        //TODO test up/down actions
+        api.action(TestEnv.NODE_NAME, NodeAction.DOWN);
+
+        NodeInfo info = api.getInfo().stream()
+                .filter(x -> x.getName().equals(TestEnv.NODE_NAME))
+                .findFirst().orElseThrow(() -> new IllegalStateException(String.format("Info for node '%s' was not found", TestEnv.NODE_NAME)));
+        assertEquals(NodeStatus.DOWN, info.getStatus());
+
+        api.action(TestEnv.NODE_NAME, NodeAction.UP);
+
+        info = api.getInfo().stream()
+                .filter(x -> x.getName().equals(TestEnv.NODE_NAME))
+                .findFirst().orElseThrow(() -> new IllegalStateException(String.format("Info for node '%s' was not found", TestEnv.NODE_NAME)));
+        assertEquals(NodeStatus.UP, info.getStatus());
     }
 
-    @Test
+    @Test(expected = HttpServerErrorException.class)
     public void putWithStoppedNode() {
-        //TODO test put if node/container was stopped
+        api.action(TestEnv.NODE_NAME, NodeAction.DOWN);
+
+        final String key = Random.nextKey();
+        final byte[] value = Random.nextValue();
+
+        api.put(key, value);
     }
 
-    @Test
+    @Test(expected = HttpServerErrorException.class)
     public void getWithStoppedNode() {
-        //TODO test get if node/container was stopped
+        api.action(TestEnv.NODE_NAME, NodeAction.DOWN);
+        final String key = Random.nextKey();
+        api.get(key);
     }
 
-    @Test
+    @Test(expected = HttpServerErrorException.class)
     public void getKeysByPrefixWithStoppedNode() {
-        //TODO test getKeysByPrefix if node/container was stopped
+        api.action(TestEnv.NODE_NAME, NodeAction.DOWN);
+        final String prefix = Random.nextKey();
+        api.getKeys(prefix);
     }
 
     @Test
