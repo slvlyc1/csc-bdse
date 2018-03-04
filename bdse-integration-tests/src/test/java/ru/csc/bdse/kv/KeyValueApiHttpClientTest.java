@@ -39,6 +39,7 @@ public class KeyValueApiHttpClientTest extends AbstractKeyValueApiTest {
                 .withNetworkAliases(TestEnv.MONGO_HOST)
                 .withStartupTimeout(Duration.of(30, SECONDS));
 
+    @Override
     protected KeyValueApi newKeyValueApi() {
         final String baseUrl = "http://localhost:" + node.getMappedPort(8080);
         return new KeyValueApiHttpClient(baseUrl);
