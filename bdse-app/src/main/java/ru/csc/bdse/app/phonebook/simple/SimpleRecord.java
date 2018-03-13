@@ -1,5 +1,8 @@
 package ru.csc.bdse.app.phonebook.simple;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonGetter;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import ru.csc.bdse.app.phonebook.Record;
 import ru.csc.bdse.util.Require;
 
@@ -12,7 +15,8 @@ public class SimpleRecord implements Record {
     private final String surname;
     private final String phone;
 
-    public SimpleRecord(String name, String surname, String phone) {
+    @JsonCreator
+    public SimpleRecord(@JsonProperty("name") String name, @JsonProperty("surname") String surname, @JsonProperty("phone") String phone) {
         Require.nonEmpty(name, "name should not be empty");
         Require.nonEmpty(surname, "surname should not be empty");
         Require.nonEmpty(phone, "phone should not be empty");
@@ -26,14 +30,17 @@ public class SimpleRecord implements Record {
         return Collections.singleton(name.charAt(0));
     }
 
+    @JsonGetter("name")
     public String getName() {
         return name;
     }
 
+    @JsonGetter("surname")
     public String getSurname() {
         return surname;
     }
 
+    @JsonGetter("phone")
     public String getPhone() {
         return phone;
     }
@@ -46,5 +53,14 @@ public class SimpleRecord implements Record {
     @Override
     public Optional<String> getNickname() {
         return Optional.empty();
+    }
+
+    @Override
+    public String toString() {
+        return "SimpleRecord{" +
+                "name='" + name + '\'' +
+                ", surname='" + surname + '\'' +
+                ", phone='" + phone + '\'' +
+                '}';
     }
 }
