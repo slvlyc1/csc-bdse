@@ -1,5 +1,6 @@
 package ru.csc.bdse.kv;
 
+import java.util.Optional;
 import java.util.Set;
 
 public class KeyValueApiClient {
@@ -16,6 +17,10 @@ public class KeyValueApiClient {
 
     public Set<String> getKeys(String prefix) {
         return api.getKeys(prefix);
+    }
+
+    public Optional<byte[]> getValue(String key) {
+        return api.get(key);
     }
 
     public void delete(String key) {
