@@ -9,8 +9,6 @@ import java.util.Set;
  * @author alesavin
  */
 
-//todo: suggest to use JSON
-//todo: and just make fields additionalPhones & nickname optional in it
 public interface Record {
 
     /**
@@ -24,7 +22,7 @@ public interface Record {
 
     String getPhone();
 
-    Optional<Set<String>> getAdditionalPhones();
+    String getNickname();
 
-    Optional<String> getNickname();
+    String getAdditionalPhone();
 }

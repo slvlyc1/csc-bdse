@@ -3,9 +3,9 @@ package ru.csc.bdse.app.phonebook.simple;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ru.csc.bdse.app.phonebook.Helper;
 import ru.csc.bdse.app.phonebook.PhoneBookApi;
 import ru.csc.bdse.app.phonebook.Record;
+import ru.csc.bdse.app.phonebook.RecordSerializer;
 import ru.csc.bdse.kv.KeyValueApiClient;
 
 import java.io.IOException;
@@ -16,19 +16,22 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class SimplePhoneBookApi implements PhoneBookApi {
 
-    private static final Logger logger = LoggerFactory.getLogger(Helper.class);
+    private static final Logger logger = LoggerFactory.getLogger(SimplePhoneBookApi.class);
     private static final AtomicInteger uid = new AtomicInteger(0);
 
     private final KeyValueApiClient keyValueApiClient;
+    private final RecordSerializer serializer;
 
-    public SimplePhoneBookApi(String nodeUrl) {
+    public SimplePhoneBookApi(String nodeUrl, RecordSerializer serializer) {
         keyValueApiClient = new KeyValueApiClient(nodeUrl);
+        this.serializer = serializer;
     }
 
     @Override
     public void put(Record record) {
         try {
-            final byte[] json = Helper.serializeRecord(record);
+            final byte[] json = serializer.serializeRecord(record);
+
             String key = record.getSurname() + LocalTime.now() + uid.incrementAndGet();
             keyValueApiClient.put(key, json);
         } catch (JsonProcessingException e) {
@@ -45,7 +48,7 @@ public class SimplePhoneBookApi implements PhoneBookApi {
         for (String key: keys) {
             keyValueApiClient.getValue(key).ifPresent(value -> {
                 try {
-                    Record record = Helper.deserializeRecord(value);
+                    Record record = serializer.deserializeRecord(value);
                     if (record.equals(recordToBeDeleted)) keyValueApiClient.delete(key);
                 } catch (IOException e) {
                     logger.error(e.toString());
@@ -66,7 +69,7 @@ public class SimplePhoneBookApi implements PhoneBookApi {
             keyValueApiClient.getValue(key)
                     .ifPresent(value -> {
                         try {
-                            res.add(Helper.deserializeRecord(value));
+                            res.add(serializer.deserializeRecord(value));
                         } catch (IOException e) {
                             logger.error(e.toString());
                         }

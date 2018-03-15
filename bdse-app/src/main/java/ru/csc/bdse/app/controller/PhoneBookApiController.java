@@ -3,8 +3,8 @@ package ru.csc.bdse.app.controller;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
-import ru.csc.bdse.app.phonebook.Helper;
 import ru.csc.bdse.app.phonebook.PhoneBookApi;
+import ru.csc.bdse.app.phonebook.RecordSerializer;
 import java.io.IOException;
 
 /**
@@ -15,16 +15,19 @@ import java.io.IOException;
 @RestController
 public class PhoneBookApiController {
     private final PhoneBookApi phoneBookApi;
+    private final RecordSerializer serializer;
+
     private static final Logger logger = LoggerFactory.getLogger(PhoneBookApiController.class);
 
-    public PhoneBookApiController(PhoneBookApi phoneBookApi) {
+    public PhoneBookApiController(PhoneBookApi phoneBookApi, RecordSerializer serializer) {
         this.phoneBookApi = phoneBookApi;
+        this.serializer = serializer;
     }
 
     @RequestMapping(method = RequestMethod.PUT, value = "/phone-book")
     public void put(@RequestBody final byte[] value) {
         try {
-            phoneBookApi.put(Helper.deserializeRecord(value));
+            phoneBookApi.put(serializer.deserializeRecord(value));
         } catch (IOException e) {
             logger.error(e.getMessage());
         }
@@ -39,7 +42,7 @@ public class PhoneBookApiController {
     @RequestMapping(method = RequestMethod.PUT, value = "/phone-book/delete")
     public void delete(@RequestBody final byte[] value) {
         try {
-            phoneBookApi.delete(Helper.deserializeRecord(value));
+            phoneBookApi.delete(serializer.deserializeRecord(value));
         } catch (IOException e) {
             logger.error(e.getMessage());
         }
