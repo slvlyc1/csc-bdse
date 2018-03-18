@@ -36,45 +36,59 @@ public class SimplePhoneBookApi implements PhoneBookApi {
             keyValueApiClient.put(key, json);
         } catch (JsonProcessingException e) {
             logger.error(e.toString());
+            throw new RuntimeException(String.format("Failed to add record: '%s'. Incorrect format.", record));
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            throw new RuntimeException("Internal storage is unavailable");
         }
     }
 
     @Override
     public void delete(Record recordToBeDeleted) {
-        Set<String> keys = new HashSet<>();
-        for (Character literal: recordToBeDeleted.literals())
-            keys.addAll(keyValueApiClient.getKeys(String.valueOf(literal)));
+        try {
+            Set<String> keys = new HashSet<>();
+            for (Character literal : recordToBeDeleted.literals())
+                keys.addAll(keyValueApiClient.getKeys(String.valueOf(literal)));
 
-        for (String key: keys) {
-            keyValueApiClient.getValue(key).ifPresent(value -> {
-                try {
-                    Record record = serializer.deserializeRecord(value);
-                    if (record.equals(recordToBeDeleted)) keyValueApiClient.delete(key);
-                } catch (IOException e) {
-                    logger.error(e.toString());
-                }
-            });
+            for (String key : keys) {
+                keyValueApiClient.getValue(key).ifPresent(value -> {
+                    try {
+                        Record record = serializer.deserializeRecord(value);
+                        if (record.equals(recordToBeDeleted)) keyValueApiClient.delete(key);
+                    } catch (IOException e) {
+                        logger.error(e.toString());
+                    }
+                });
 
+            }
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            throw new RuntimeException("Internal storage is unavailable");
         }
     }
 
 
     @Override
     public Set get(char literal) {
-        Set<Record> res = new HashSet<>();
+        try {
+            Set<Record> res = new HashSet<>();
 
-        Set<String> keys = keyValueApiClient.getKeys(String.valueOf(literal));
+            Set<String> keys = keyValueApiClient.getKeys(String.valueOf(literal));
 
-        for (String key: keys) {
-            keyValueApiClient.getValue(key)
-                    .ifPresent(value -> {
-                        try {
-                            res.add(serializer.deserializeRecord(value));
-                        } catch (IOException e) {
-                            logger.error(e.toString());
-                        }
-                    });
+            for (String key : keys) {
+                keyValueApiClient.getValue(key)
+                        .ifPresent(value -> {
+                            try {
+                                res.add(serializer.deserializeRecord(value));
+                            } catch (IOException e) {
+                                logger.error(e.toString());
+                            }
+                        });
+            }
+            return res;
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            throw new RuntimeException("Internal storage is unavailable");
         }
-        return res;
     }
 }

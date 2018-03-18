@@ -2,10 +2,12 @@ package ru.csc.bdse.app.controller;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.csc.bdse.app.phonebook.PhoneBookApi;
 import ru.csc.bdse.app.phonebook.RecordSerializer;
 import java.io.IOException;
+import java.util.Optional;
 
 /**
  * Provides HTTP API for phone book
@@ -30,6 +32,7 @@ public class PhoneBookApiController {
             phoneBookApi.put(serializer.deserializeRecord(value));
         } catch (IOException e) {
             logger.error(e.getMessage());
+            throw new RuntimeException("Invalid record value: " + value);
         }
     }
 
@@ -45,7 +48,13 @@ public class PhoneBookApiController {
             phoneBookApi.delete(serializer.deserializeRecord(value));
         } catch (IOException e) {
             logger.error(e.getMessage());
+            throw new RuntimeException("Invalid record value: " + value);
         }
     }
 
+    @ExceptionHandler(Exception.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public String handle(Exception e) {
+        return Optional.ofNullable(e.getMessage()).orElse("");
+    }
 }
