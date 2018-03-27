@@ -2,7 +2,8 @@ package ru.csc.bdse.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import ru.csc.bdse.kv.KeyValueApi;
+import ru.csc.bdse.kv.CoordinatorKeyValueApi;
+import ru.csc.bdse.kv.FailedOperationException;
 import ru.csc.bdse.kv.NodeAction;
 import ru.csc.bdse.kv.NodeInfo;
 
@@ -10,24 +11,19 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Set;
 
-/**
- * Provides HTTP API for the storage unit
- *
- * @author semkagtn
- */
-//@RestController
-public class KeyValueApiController {
+@RestController
+public class CoordinatorController {
 
-    private final KeyValueApi keyValueApi;
+    private final CoordinatorKeyValueApi keyValueApi;
 
-    public KeyValueApiController(final KeyValueApi keyValueApi) {
+    public CoordinatorController(final CoordinatorKeyValueApi keyValueApi) {
         this.keyValueApi = keyValueApi;
     }
 
     @RequestMapping(method = RequestMethod.PUT, value = "/key-value/{key}")
     public void put(@PathVariable final String key,
                     @RequestBody final byte[] value) {
-        keyValueApi.put(key, value);
+            keyValueApi.put(key, value);
     }
 
     @RequestMapping(method = RequestMethod.GET, value = "/key-value/{key}")
@@ -64,6 +60,12 @@ public class KeyValueApiController {
     @ExceptionHandler(IllegalArgumentException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public String handle(IllegalArgumentException e) {
+        return Optional.ofNullable(e.getMessage()).orElse("");
+    }
+
+    @ExceptionHandler(FailedOperationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public String handle(FailedOperationException e) {
         return Optional.ofNullable(e.getMessage()).orElse("");
     }
 }
