@@ -31,14 +31,16 @@ public class Application {
 
     @Bean
     CoordinatorKeyValueApi coordinator() {
+        String nodeName = Env.get(Env.KVNODE_NAME).orElseGet(Application::randomNodeName);
+
         return new CoordinatorKeyValueApi(
+                nodeName,
                 new ArrayList<>(
                     Arrays.asList(
                         node(),
                         node(),
                         node()
                     )
-                ), 4, 2, 1000
-        );
+                ), 4, 2, 1000);
     }
 }

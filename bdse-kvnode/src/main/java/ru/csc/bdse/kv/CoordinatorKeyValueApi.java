@@ -13,6 +13,9 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import static ru.csc.bdse.kv.NodeStatus.DOWN;
+import static ru.csc.bdse.kv.NodeStatus.UP;
+
 public class CoordinatorKeyValueApi implements KeyValueApi {
 
     private List<KeyValueApi> keyValueNodes;
@@ -20,23 +23,29 @@ public class CoordinatorKeyValueApi implements KeyValueApi {
     private int readConsistencyLevel;
     private long timeout;
 
+    private final String nodeName;
+    private volatile NodeStatus nodeStatus;
+
     private static final Logger log = LoggerFactory.getLogger(CoordinatorKeyValueApi.class);
 
-    public CoordinatorKeyValueApi(List<KeyValueApi> keyValueNodes, int writeConsistencyLevel, int readConsistencyLevel, long timeout) {
+    public CoordinatorKeyValueApi(String nodeName, List<KeyValueApi> keyValueNodes, int writeConsistencyLevel, int readConsistencyLevel, long timeout) {
+        this.nodeName = nodeName;
         this.keyValueNodes = keyValueNodes;
         this.writeConsistencyLevel = writeConsistencyLevel;
         this.readConsistencyLevel = readConsistencyLevel;
         this.timeout = timeout;
+        this.nodeStatus = UP;
     }
 
     @Override
     public void put(String key, byte[] value) {
-        byte[] record = wrapRecord(value);
+
+        if (nodeStatus.equals(DOWN)) throw new IllegalStateException(String.format("Node '%s' is down", nodeName));
 
         CountDownLatch countDownLatch = new CountDownLatch(writeConsistencyLevel);
 
         List<Thread> putThreads = keyValueNodes.stream().map(node -> new Thread(() -> {
-            node.put(key, record);
+            node.put(key, wrapRecord(value, node.getInfo()));
             countDownLatch.countDown();
         })).collect(Collectors.toList());
 
@@ -55,14 +64,16 @@ public class CoordinatorKeyValueApi implements KeyValueApi {
 
     }
 
-    private byte[] wrapRecord(byte[] value) {
-        RecordWithTimestamp record = new RecordWithTimestamp(value, System.currentTimeMillis());
+    private byte[] wrapRecord(byte[] value, Set<NodeInfo> info) {
+        RecordWithTimestamp record = new RecordWithTimestamp(value, System.currentTimeMillis(), info.iterator().next().getName());
         String recordJson = new GsonBuilder().create().toJson(record);
         return recordJson.getBytes();
     }
 
     @Override
     public Optional<byte[]> get(String key) {
+
+        if (nodeStatus.equals(DOWN)) throw new IllegalStateException(String.format("Node '%s' is down", nodeName));
 
         CountDownLatch countDownLatch = new CountDownLatch(writeConsistencyLevel);
 
@@ -84,13 +95,22 @@ public class CoordinatorKeyValueApi implements KeyValueApi {
         }
 
         if (!completed) {
-            throw new FailedOperationException(String.format("Failed to write with WCL level = %s", writeConsistencyLevel));
+            throw new FailedOperationException(String.format("Failed to write with WCL level = %s",
+                    writeConsistencyLevel));
         }
 
-        Set<RecordWithTimestamp> conflictRecords = values.stream().map(this::unwrapRecord).collect(Collectors.toSet());
-        RecordWithTimestamp resolvedRecord = new LatestValueConflictResolver().resolve(conflictRecords);
+        Set<RecordWithTimestamp> conflictingRecords = values.stream()
+                .map(this::unwrapRecord)
+                .collect(Collectors.toSet());
 
-        return Optional.ofNullable(resolvedRecord.getPayload());
+        if (!conflictingRecords.isEmpty()) {
+            RecordWithTimestamp resolvedRecord = new LatestValueConflictResolver().resolve(conflictingRecords);
+
+            return resolvedRecord.isDeleted() ? Optional.empty() : Optional.ofNullable(resolvedRecord.getPayload());
+        }
+        else {
+            return Optional.empty();
+        }
     }
 
     private RecordWithTimestamp unwrapRecord(byte[] value) {
@@ -102,17 +122,21 @@ public class CoordinatorKeyValueApi implements KeyValueApi {
 
     @Override
     public Set<String> getKeys(String prefix) {
+        if (nodeStatus.equals(DOWN)) throw new IllegalStateException(String.format("Node '%s' is down", nodeName));
+
         return null;
     }
 
     @Override
     public void delete(String key) {
-
+        if (nodeStatus.equals(DOWN)) throw new IllegalStateException(String.format("Node '%s' is down", nodeName));
     }
 
     @Override
     public Set<NodeInfo> getInfo() {
-        return null;
+        return keyValueNodes.stream()
+                .map(KeyValueApi::getInfo)
+                .flatMap(Set::stream).collect(Collectors.toSet());
     }
 
     @Override
