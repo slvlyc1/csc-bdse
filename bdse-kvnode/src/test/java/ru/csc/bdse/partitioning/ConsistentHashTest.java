@@ -1,9 +1,10 @@
-package ru.csc.bdse.hashing;
+package ru.csc.bdse.partitioning;
 
 import org.apache.commons.lang.RandomStringUtils;
 import org.junit.Test;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -59,11 +60,10 @@ public class ConsistentHashTest {
             assertThat(statistics.get(node)).as(node + " counts").isLessThan(keysCount / (nodes.size() - 1));
         }
     }
-    @Test
-    public void rebalanceKeysAfterRemoveForFiveNodesAndMd5() {
+    public void rebalanceKeysAfterRemoveForFiveNodesAndMd5(Function<String, Integer> hashFunction) {
         Set<String> nodes = new HashSet<>(Arrays.asList("0", "1", "2", "3", "4"));
         final ConsistentHash ch =
-                new ConsistentHash( HashingFunctions.md5Function, 2, nodes);
+                new ConsistentHash(HashingFunctions.md5Function, 2, nodes);
         int keysCount = 100;
         Collection<String> keys =
                 Stream.generate(() -> RandomStringUtils.random(10)).limit(keysCount).collect(Collectors.toList());

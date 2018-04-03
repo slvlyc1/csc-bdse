@@ -1,4 +1,4 @@
-package ru.csc.bdse.hashing;
+package ru.csc.bdse.partitioning;
 
 
 import java.util.Collection;
@@ -8,8 +8,7 @@ import java.util.function.Function;
 
 /**
  * Represents consistent hashing circle
- *  See https://web.archive.org/web/20120605030524/http://weblogs.java
- *  .net/blog/tomwhite/archive/2007/11/consistent_hash.html
+ *  See https://web.archive.org/web/20120605030524/http://weblogs.java.net/blog/tomwhite/archive/2007/11/consistent_hash.html
  *
  * @author alesavin
  */
@@ -17,7 +16,7 @@ public class ConsistentHash {
 
     private final Function<String, Integer> hashFunction;
     private final int numberOfReplicas;
-    private final SortedMap<Integer, String> circle = new TreeMap<Integer, String>();
+    private final SortedMap<Integer, String> circle = new TreeMap<>();
 
     public ConsistentHash(final Function<String, Integer> hashFunction,
                           int numberOfReplicas,
