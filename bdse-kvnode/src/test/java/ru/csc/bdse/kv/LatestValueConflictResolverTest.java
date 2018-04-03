@@ -8,6 +8,7 @@ import org.junit.rules.ExpectedException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 
@@ -25,9 +26,9 @@ public class LatestValueConflictResolverTest {
     @Test
     public void resolveLatestValue() throws Exception {
         // Given
-        RecordWithTimestamp recordOne = new RecordWithTimestamp("valueOne".getBytes(), 123000, "NODE_ONE");
-        RecordWithTimestamp recordTwo = new RecordWithTimestamp("valueTwo".getBytes(), 123010, "NODE_TWO");
-        RecordWithTimestamp recordThree = new RecordWithTimestamp("valueThree".getBytes(), 123005, "NODE_THREE");
+        RecordWithTimestamp recordOne = new RecordWithTimestamp("valueOne".getBytes(), 123000, false, "NODE_ONE");
+        RecordWithTimestamp recordTwo = new RecordWithTimestamp("valueTwo".getBytes(), 123010, false,"NODE_TWO");
+        RecordWithTimestamp recordThree = new RecordWithTimestamp("valueThree".getBytes(), 123005, false, "NODE_THREE");
 
         HashSet<RecordWithTimestamp> conflictingRecords = new HashSet<>(Arrays.asList(recordOne, recordTwo, recordThree));
 
@@ -41,10 +42,10 @@ public class LatestValueConflictResolverTest {
     @Test
     public void resolveMostCommonValue() throws Exception {
         //Given
-        RecordWithTimestamp recordOne = new RecordWithTimestamp("valueOne".getBytes(), 123000, "NODE_ONE");
-        RecordWithTimestamp recordTwo = new RecordWithTimestamp("commonValue".getBytes(), 123000, "NODE_TWO");
-        RecordWithTimestamp recordThree = new RecordWithTimestamp("commonValue".getBytes(), 123000, "NODE_THREE");
-        RecordWithTimestamp recordFour = new RecordWithTimestamp("valueFour".getBytes(), 123000, "NODE_FOUR");
+        RecordWithTimestamp recordOne = new RecordWithTimestamp("valueOne".getBytes(), 123000, false, "NODE_ONE");
+        RecordWithTimestamp recordTwo = new RecordWithTimestamp("commonValue".getBytes(), 123000, false, "NODE_TWO");
+        RecordWithTimestamp recordThree = new RecordWithTimestamp("commonValue".getBytes(), 123000, false, "NODE_THREE");
+        RecordWithTimestamp recordFour = new RecordWithTimestamp("valueFour".getBytes(), 123000, false, "NODE_FOUR");
 
         HashSet<RecordWithTimestamp> conflictingRecords = new HashSet<>(Arrays.asList(recordOne, recordTwo, recordThree, recordFour));
 
@@ -62,7 +63,7 @@ public class LatestValueConflictResolverTest {
     @Test
     public void resolveSingleValue() throws Exception {
         //Given
-        RecordWithTimestamp recordOne = new RecordWithTimestamp("valueOne".getBytes(), 123000, "NODE_ONE");
+        RecordWithTimestamp recordOne = new RecordWithTimestamp("valueOne".getBytes(), 123000, false, "NODE_ONE");
 
         HashSet<RecordWithTimestamp> conflictingRecords = new HashSet<>(Collections.singletonList(recordOne));
 
@@ -84,5 +85,24 @@ public class LatestValueConflictResolverTest {
 
         // When
         RecordWithTimestamp resolvedRecord = resolver.resolve(conflictingRecords);
+    }
+
+    @Test
+    public void resolveKeys() throws Exception {
+
+        // Given
+        Set<Set<String>> keys = new HashSet<>(Arrays.asList(
+                new HashSet<>(Arrays.asList("keyOne", "keyTwo")),
+                new HashSet<>(Arrays.asList("keyOne", "keyThree")),
+                new HashSet<>(Arrays.asList("keyTwo", "keyFour", "keyFive"))
+        ));
+
+        HashSet<String> correctKeys = new HashSet<>(Arrays.asList("keyOne", "keyTwo", "keyThree", "keyFour", "keyFive"));
+
+        // When
+        Set<String> resolvedKeys = resolver.resolveKeys(keys);
+
+        // Then
+        assertEquals(correctKeys, resolvedKeys);
     }
 }

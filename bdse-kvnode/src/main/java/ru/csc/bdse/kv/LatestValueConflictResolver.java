@@ -31,6 +31,9 @@ public class LatestValueConflictResolver implements ConflictResolver {
 
     @Override
     public Set<String> resolveKeys(Set<Set<String>> in) {
-        return null;
+        // union of the keys sets
+        return in.stream()
+                .flatMap(Set::stream)
+                .collect(Collectors.toSet());
     }
 }

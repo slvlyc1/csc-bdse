@@ -6,11 +6,11 @@ public class RecordWithTimestamp {
     private boolean isDeleted;
     private String nodeId;
 
-    public RecordWithTimestamp(byte[] payload, long timestamp, String nodeId) {
+    public RecordWithTimestamp(byte[] payload, long timestamp, boolean isDeleted, String nodeId) {
         this.payload = payload;
         this.timestamp = timestamp;
+        this.isDeleted = isDeleted;
         this.nodeId = nodeId;
-        this.isDeleted = false;
     }
 
     public byte[] getPayload() {

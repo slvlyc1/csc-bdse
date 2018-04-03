@@ -4,11 +4,7 @@ import com.google.gson.GsonBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -39,13 +35,16 @@ public class CoordinatorKeyValueApi implements KeyValueApi {
 
     @Override
     public void put(String key, byte[] value) {
-
         if (nodeStatus.equals(DOWN)) throw new IllegalStateException(String.format("Node '%s' is down", nodeName));
 
+        writeToNodes(key, value, false);
+    }
+
+    private void writeToNodes(String key, byte[] value, boolean isDeleted) {
         CountDownLatch countDownLatch = new CountDownLatch(writeConsistencyLevel);
 
         List<Thread> putThreads = keyValueNodes.stream().map(node -> new Thread(() -> {
-            node.put(key, wrapRecord(value, node.getInfo()));
+            node.put(key, wrapRecord(value, isDeleted, node.getInfo()));
             countDownLatch.countDown();
         })).collect(Collectors.toList());
 
@@ -61,11 +60,10 @@ public class CoordinatorKeyValueApi implements KeyValueApi {
         if (!completed) {
             throw new FailedOperationException(String.format("Failed to write with WCL level = %s", writeConsistencyLevel));
         }
-
     }
 
-    private byte[] wrapRecord(byte[] value, Set<NodeInfo> info) {
-        RecordWithTimestamp record = new RecordWithTimestamp(value, System.currentTimeMillis(), info.iterator().next().getName());
+    private byte[] wrapRecord(byte[] value, boolean isDeleted, Set<NodeInfo> info) {
+        RecordWithTimestamp record = new RecordWithTimestamp(value, System.currentTimeMillis(), isDeleted, info.iterator().next().getName());
         String recordJson = new GsonBuilder().create().toJson(record);
         return recordJson.getBytes();
     }
@@ -75,17 +73,17 @@ public class CoordinatorKeyValueApi implements KeyValueApi {
 
         if (nodeStatus.equals(DOWN)) throw new IllegalStateException(String.format("Node '%s' is down", nodeName));
 
-        CountDownLatch countDownLatch = new CountDownLatch(writeConsistencyLevel);
+        CountDownLatch countDownLatch = new CountDownLatch(readConsistencyLevel);
 
         List<byte[]> values = Collections.synchronizedList(new ArrayList<byte[]>());
 
-        List<Thread> putThreads = keyValueNodes.stream().map(node -> new Thread(() ->
+        List<Thread> getThreads = keyValueNodes.stream().map(node -> new Thread(() ->
             node.get(key).ifPresent(value -> {
                     values.add(value);
                     countDownLatch.countDown();
             }))).collect(Collectors.toList());
 
-        putThreads.forEach(Thread::start);
+        getThreads.forEach(Thread::start);
 
         boolean completed = false;
         try {
@@ -95,8 +93,8 @@ public class CoordinatorKeyValueApi implements KeyValueApi {
         }
 
         if (!completed) {
-            throw new FailedOperationException(String.format("Failed to write with WCL level = %s",
-                    writeConsistencyLevel));
+            throw new FailedOperationException(String.format("Failed to read with RCL level = %s",
+                    readConsistencyLevel));
         }
 
         Set<RecordWithTimestamp> conflictingRecords = values.stream()
@@ -124,12 +122,41 @@ public class CoordinatorKeyValueApi implements KeyValueApi {
     public Set<String> getKeys(String prefix) {
         if (nodeStatus.equals(DOWN)) throw new IllegalStateException(String.format("Node '%s' is down", nodeName));
 
-        return null;
+        CountDownLatch countDownLatch = new CountDownLatch(readConsistencyLevel);
+
+        Set<Set<String>> keys = new HashSet<>();
+
+        List<Thread> getThreads = keyValueNodes.stream()
+                .map(node -> new Thread(() -> {
+                    keys.add(node.getKeys(prefix));
+                    countDownLatch.countDown();
+                })).collect(Collectors.toList());
+
+        getThreads.forEach(Thread::start);
+
+        boolean completed = false;
+        try {
+            completed = countDownLatch.await(timeout, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+
+        if (!completed) {
+            throw new FailedOperationException(String.format("Failed to read with RCL level = %s",
+                    readConsistencyLevel));
+        }
+
+        return new LatestValueConflictResolver().resolveKeys(keys);
     }
 
     @Override
     public void delete(String key) {
         if (nodeStatus.equals(DOWN)) throw new IllegalStateException(String.format("Node '%s' is down", nodeName));
+
+        byte[] value = get(key)
+                .orElseThrow(() -> new IllegalStateException(String.format("Failed to delete on non-existing key '%s'", key)));
+
+        writeToNodes(key, value, true);
     }
 
     @Override
