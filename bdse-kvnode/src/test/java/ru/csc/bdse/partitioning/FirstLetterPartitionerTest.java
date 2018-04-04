@@ -16,8 +16,8 @@ public class FirstLetterPartitionerTest {
 
     @Test
     public void mapsToNodeByFirstLetter() {
-        List<String> nodes = Arrays.asList("0", "1", "2");
-        final Partitioner partitioner = new FirstLetterPartitioner(nodes);
+        List<String> partitions = Arrays.asList("0", "1", "2");
+        final Partitioner partitioner = new FirstLetterPartitioner(partitions);
         assertThat(partitioner.getPartition("\u0000")).isEqualTo("0");
         assertThat(partitioner.getPartition("\uFFFF")).isEqualTo("2");
         assertThat(partitioner.getPartition("\uFFFA")).isEqualTo("2");
@@ -32,7 +32,7 @@ public class FirstLetterPartitionerTest {
         assertThat(partitioner.getPartition("z")).isEqualTo("0");
         assertThat(partitioner.getPartition("Zde")).isEqualTo("0");
 
-        char c1 = (char)(Character.MAX_VALUE / nodes.size());
+        char c1 = (char)(Character.MAX_VALUE / partitions.size());
         assertThat(partitioner.getPartition(new String(new char[]{c1}))).isEqualTo("0");
         assertThat(partitioner.getPartition(new String(new char[]{(char)(c1 + 1)}))).isEqualTo("1");
         assertThat(partitioner.getPartition(new String(new char[]{(char)(c1 + 5)}))).isEqualTo("1");
@@ -41,9 +41,9 @@ public class FirstLetterPartitionerTest {
 
     @Test
     public void mapsToRepeatedNodeByFirstLetter() {
-        List<String> nodes = Arrays.asList("0", "1", "2", "0", "1", "2");
-        final Partitioner partitioner = new FirstLetterPartitioner(nodes);
-        char c1 = (char)(Character.MAX_VALUE / nodes.size());
+        List<String> partitions = Arrays.asList("0", "1", "2", "0", "1", "2");
+        final Partitioner partitioner = new FirstLetterPartitioner(partitions);
+        char c1 = (char)(Character.MAX_VALUE / partitions.size());
         assertThat(partitioner.getPartition(new String(new char[]{c1}))).isEqualTo("0");
         assertThat(partitioner.getPartition(new String(new char[]{(char)(c1 + 1)}))).isEqualTo("1");
         assertThat(partitioner.getPartition(new String(new char[]{(char)(c1 + 5)}))).isEqualTo("1");
