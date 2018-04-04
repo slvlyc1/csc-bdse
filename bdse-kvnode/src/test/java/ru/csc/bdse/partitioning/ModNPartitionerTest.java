@@ -1,5 +1,6 @@
 package ru.csc.bdse.partitioning;
 
+import org.apache.commons.lang.RandomStringUtils;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -19,7 +20,7 @@ import static org.assertj.core.api.Java6Assertions.assertThat;
 public class ModNPartitionerTest {
 
     @Test
-    public void mapsToNodeByModN() {
+    public void mapsByModN() {
         Set<String> partitions = new HashSet<>(Arrays.asList("0", "1", "2"));
         final Partitioner partitioner = new ModNPartitioner(partitions);
         assertThat(partitioner.getPartition("123")).isEqualTo("0");
@@ -29,10 +30,10 @@ public class ModNPartitionerTest {
     }
 
     @Test
-    public void mapsToNodeByModNForSerialKeys() {
+    public void moveHalfOfKeysThenRebalance() {
 
         Set<String> keys =
-                Stream.iterate(1000, n -> n + 3).limit(100).map(String::valueOf).collect(Collectors.toSet());
+                Stream.generate(() -> RandomStringUtils.randomAlphanumeric(10)).limit(1000).collect(Collectors.toSet());
 
         final Set<String> partitions = new HashSet<>(Arrays.asList("0", "1", "2"));
         final Map<String, String> map = PartitionerUtils.getAll(
@@ -45,7 +46,7 @@ public class ModNPartitionerTest {
                 keys);
 
         // There more than half of the keys to be moved
-        assertThat(PartitionerUtils.diffStatistics(partitions, map, map2).values().stream().mapToLong(Math::abs).sum()).as("no diffs")
+        assertThat(PartitionerUtils.moves(map, map2)).as("moves")
                 .isGreaterThan(keys.size() / 2);
     }
 }

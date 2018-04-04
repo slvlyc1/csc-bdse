@@ -1,5 +1,6 @@
 package ru.csc.bdse.partitioning;
 
+import org.apache.commons.lang.RandomStringUtils;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -19,7 +20,7 @@ import static org.assertj.core.api.Java6Assertions.assertThat;
 public class FirstLetterPartitionerTest {
 
     @Test
-    public void mapsToNodeByFirstLetter() {
+    public void mapsByFirstLetter() {
         Set<String> partitions = new HashSet<>(Arrays.asList("0", "1", "2"));
         final Partitioner partitioner = new FirstLetterPartitioner(partitions);
         assertThat(partitioner.getPartition("\u0000")).isEqualTo("0");
@@ -44,7 +45,7 @@ public class FirstLetterPartitionerTest {
     }
 
     @Test
-    public void mapsToRepeatedNodeByFirstLetter() {
+    public void mapsByFirstLetterInRanges() {
         Set<String> partitions = new HashSet<>(Arrays.asList("0", "1", "2"));
         final Partitioner partitioner = new FirstLetterPartitioner(partitions);
         char c1 = (char)(Character.MAX_VALUE / partitions.size());
@@ -60,25 +61,23 @@ public class FirstLetterPartitionerTest {
     }
 
     @Test
-    public void mapsToNodeByFirstLetterForSerialKeys() {
+    public void moveAllOfKeysThenRebalance() {
 
         Set<String> keys =
-                Stream.iterate(1000, n -> n + 3).limit(100).map(String::valueOf).collect(Collectors.toSet());
+                Stream.generate(() -> RandomStringUtils.randomNumeric(10)).limit(1000).collect(Collectors.toSet());
 
         final Set<String> partitions = new HashSet<>(Arrays.asList("0", "1", "2"));
         final Map<String, String> map = PartitionerUtils.getAll(
                 new FirstLetterPartitioner(partitions),
                 keys);
-        assertThat(PartitionerUtils.statistics(map).size()).as("count partitions").isEqualTo(1);
 
         final Set<String> partitions2 = new HashSet<>(Arrays.asList("1", "2"));
         final Map<String, String> map2 = PartitionerUtils.getAll(
                 new FirstLetterPartitioner(partitions2),
                 keys);
-        assertThat(PartitionerUtils.statistics(map2).size()).as("count partitions").isEqualTo(1);
 
-        // There more than half of the keys to be moved
-        assertThat(PartitionerUtils.diffStatistics(partitions, map, map2).values().stream().mapToLong(Math::abs).sum()).as("no diffs")
-                .isGreaterThan(keys.size() / 2);
+        // There move all of the keys
+        assertThat(PartitionerUtils.moves(map, map2)).as("moves")
+                .isGreaterThanOrEqualTo(keys.size());
     }
 }

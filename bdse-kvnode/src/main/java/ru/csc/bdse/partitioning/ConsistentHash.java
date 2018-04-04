@@ -2,6 +2,7 @@ package ru.csc.bdse.partitioning;
 
 
 import java.util.Collection;
+import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.function.Function;
@@ -19,12 +20,12 @@ public class ConsistentHash {
     private final SortedMap<Integer, String> circle = new TreeMap<>();
 
     public ConsistentHash(final Function<String, Integer> hashFunction,
-                          final Collection<String> nodes) {
-        this(hashFunction, nodes, 3);
+                          final Set<String> nodes) {
+        this(hashFunction, nodes, 1);
     }
 
     public ConsistentHash(final Function<String, Integer> hashFunction,
-                          final Collection<String> nodes,
+                          final Set<String> nodes,
                           int factor) {
         this.hashFunction = hashFunction;
         this.factor = factor;
