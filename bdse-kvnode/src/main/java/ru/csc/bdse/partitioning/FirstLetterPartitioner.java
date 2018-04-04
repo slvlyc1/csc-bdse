@@ -1,6 +1,9 @@
 package ru.csc.bdse.partitioning;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Selects partition by first letter of a key
@@ -11,8 +14,10 @@ public class FirstLetterPartitioner implements Partitioner {
 
     private final List<String> partitions;
 
-    public FirstLetterPartitioner(List<String> partitions) {
-        this.partitions = partitions;
+    public FirstLetterPartitioner(Set<String> partitions) {
+        List<String> list = new ArrayList<>(partitions);
+        Collections.sort(list);
+        this.partitions = list;
     }
 
     @Override

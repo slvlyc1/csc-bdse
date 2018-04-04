@@ -18,59 +18,59 @@ import static org.assertj.core.api.Java6Assertions.assertThat;
 public class ConsistentHashTest {
 
     private static final boolean DEBUG_OUTPUT = false;
+    private int keysCount = 100;
 
     @Test
     public void workForOneNodeAndHashCode() {
         Set<String> nodes = Collections.singleton("0");
         final ConsistentHash ch =
-                new ConsistentHash(HashingFunctions.hashCodeFunction, 1, nodes);
+                new ConsistentHash(HashingFunctions.hashCodeFunction, nodes);
         assertThat(ch.get("00")).as("00").isEqualTo("0");
         assertThat(ch.get("0")).as("0").isEqualTo("0");
         assertThat(ch.get("k0")).as("k0").isEqualTo("0");
         assertThat(ch.get("asdjasjkdjka")).as("asdjasjkdjka").isEqualTo("0");
         assertThat(ch.get("-123")).as("-123").isEqualTo("0");
         final ConsistentHash ch2 =
-                new ConsistentHash(HashingFunctions.hashCodeFunction, 1, nodes);
+                new ConsistentHash(HashingFunctions.hashCodeFunction, nodes);
         assertThat(ch2.get("0")).as("0").isEqualTo("0");
         assertThat(ch2.get("k0")).as("k0").isEqualTo("0");
         assertThat(ch2.get("asdjasjkdjka")).as("asdjasjkdjka").isEqualTo("0");
         assertThat(ch2.get("-123")).as("-123").isEqualTo("0");
     }
+
     @Test
     public void nonEvenlyPlaceKeysForThreeNodesAndHashCode() {
         Set<String> nodes = new HashSet<>(Arrays.asList("0", "1", "2"));
         final ConsistentHash ch =
-                new ConsistentHash(HashingFunctions.hashCodeFunction, 1, nodes);
-        int keysCount = 100;
-        Collection<String> keys =
-                Stream.generate(() -> RandomStringUtils.random(10)).limit(keysCount).collect(Collectors.toList());
+                new ConsistentHash(HashingFunctions.hashCodeFunction, nodes);
+        Set<String> keys =
+                Stream.generate(() -> RandomStringUtils.random(10)).limit(keysCount).collect(Collectors.toSet());
         Map<String, Integer> statistics = getStatistics(nodes, keys, ch);
-        assertThat(statistics.get("0")).as("0 counts").isGreaterThan(keysCount / (nodes.size() - 1));
+        assertThat(statistics.get("0")).as("0 counts").isEqualTo(keysCount);
     }
+
     @Test
     public void evenlyPlaceKeysForThreeNodesAndMd5() {
         Set<String> nodes = new HashSet<>(Arrays.asList("0", "1", "2"));
         final ConsistentHash ch =
-                new ConsistentHash( HashingFunctions.md5Function, 1, nodes);
-        int keysCount = 100;
-        Collection<String> keys =
-                Stream.generate(() -> RandomStringUtils.random(10)).limit(keysCount).collect(Collectors.toList());
+                new ConsistentHash(HashingFunctions.md5Function, nodes);
+        Set<String> keys =
+                Stream.generate(() -> RandomStringUtils.random(10)).limit(keysCount).collect(Collectors.toSet());
         Map<String, Integer> statistics = getStatistics(nodes, keys, ch);
         for (String node: nodes) {
-            assertThat(statistics.get(node)).as(node + " counts").isLessThan(keysCount / (nodes.size() - 1));
+            assertThat(statistics.get(node)).as(node + " counts").isLessThan(keysCount * 2 / nodes.size() );
         }
     }
-    public void rebalanceKeysAfterRemoveForFiveNodesAndMd5(Function<String, Integer> hashFunction) {
+
+    @Test
+    public void rebalanceKeysAfterRemoveForFiveNodesAndMd5() {
         Set<String> nodes = new HashSet<>(Arrays.asList("0", "1", "2", "3", "4"));
         final ConsistentHash ch =
-                new ConsistentHash(HashingFunctions.md5Function, 2, nodes);
-        int keysCount = 100;
-        Collection<String> keys =
-                Stream.generate(() -> RandomStringUtils.random(10)).limit(keysCount).collect(Collectors.toList());
-
+                new ConsistentHash(HashingFunctions.md5Function, nodes);
+        Set<String> keys =
+                Stream.generate(() -> RandomStringUtils.random(10)).limit(keysCount).collect(Collectors.toSet());
         String nodeToRemove =
                 new ArrayList<>(nodes).get(new Random().nextInt(nodes.size()));
-
         Map<String, Integer> statisticsBeforeRemove = getStatistics(nodes, keys, ch);
         ch.remove(nodeToRemove);
         Map<String, Integer> statisticsAfterRemove = getStatistics(nodes, keys, ch);
@@ -86,14 +86,14 @@ public class ConsistentHashTest {
         }
         assertThat(movedKeys).as("moved keys").isEqualTo(statisticsBeforeRemove.get(nodeToRemove));
     }
+
     @Test
     public void rebalanceKeysForTwoConfigsForFiveNodesAndMd5() {
         Set<String> nodes = new HashSet<>(Arrays.asList("0", "1", "2", "3", "4"));
         final ConsistentHash ch =
-                new ConsistentHash( HashingFunctions.md5Function, 2, nodes);
-        int keysCount = 100;
-        Collection<String> keys =
-                Stream.generate(() -> RandomStringUtils.random(10)).limit(keysCount).collect(Collectors.toList());
+                new ConsistentHash( HashingFunctions.md5Function, nodes);
+        Set<String> keys =
+                Stream.generate(() -> RandomStringUtils.random(10)).limit(keysCount).collect(Collectors.toSet());
 
         Map<String, Integer> statisticsBefore = getStatistics(nodes, keys, ch);
 
@@ -102,7 +102,7 @@ public class ConsistentHashTest {
         Set<String> nodes2 =
                 nodes.stream().filter(n -> !nodeToRemove.equals(n)).collect(Collectors.toSet());
         final ConsistentHash ch2 =
-                new ConsistentHash( HashingFunctions.md5Function, 2, nodes2);
+                new ConsistentHash( HashingFunctions.md5Function, nodes2);
 
         Map<String, Integer> statisticsAfter = getStatistics(nodes2, keys, ch2);
 

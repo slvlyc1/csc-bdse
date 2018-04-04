@@ -1,6 +1,6 @@
 package ru.csc.bdse.partitioning;
 
-import java.util.List;
+import java.util.Set;
 
 /**
  * Selects partition by consistent hashing circle
@@ -11,8 +11,8 @@ public class ConsistentHashMd5Partitioner implements Partitioner {
 
     private final ConsistentHash ch;
 
-    public ConsistentHashMd5Partitioner(List<String> partitions) {
-        this.ch = new ConsistentHash(HashingFunctions.md5Function, 3, partitions);
+    public ConsistentHashMd5Partitioner(Set<String> partitions) {
+        this.ch = new ConsistentHash(HashingFunctions.md5Function, partitions);
     }
 
     @Override

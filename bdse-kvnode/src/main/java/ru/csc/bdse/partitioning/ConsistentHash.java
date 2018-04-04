@@ -15,14 +15,19 @@ import java.util.function.Function;
 public class ConsistentHash {
 
     private final Function<String, Integer> hashFunction;
-    private final int numberOfReplicas;
+    private final int factor;
     private final SortedMap<Integer, String> circle = new TreeMap<>();
 
     public ConsistentHash(final Function<String, Integer> hashFunction,
-                          int numberOfReplicas,
-                          Collection<String> nodes) {
+                          final Collection<String> nodes) {
+        this(hashFunction, nodes, 3);
+    }
+
+    public ConsistentHash(final Function<String, Integer> hashFunction,
+                          final Collection<String> nodes,
+                          int factor) {
         this.hashFunction = hashFunction;
-        this.numberOfReplicas = numberOfReplicas;
+        this.factor = factor;
 
         for (String node : nodes) {
             add(node);
@@ -30,13 +35,13 @@ public class ConsistentHash {
     }
 
     private void add(String node) {
-        for (int i = 0; i < numberOfReplicas; i++) {
+        for (int i = 0; i < factor; i++) {
             circle.put(hashFunction.apply(node + i), node);
         }
     }
 
     public void remove(String node) {
-        for (int i = 0; i < numberOfReplicas; i++) {
+        for (int i = 0; i < factor; i++) {
             circle.remove(hashFunction.apply(node + i));
         }
     }
