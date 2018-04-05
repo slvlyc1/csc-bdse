@@ -49,7 +49,7 @@ public class ConsistentHash {
 
     public String get(String key) {
         if (circle.isEmpty()) {
-            return null;
+            throw new IllegalStateException("ConsistentHash circle is empty");
         }
         int hash = hashFunction.apply(key);
         if (!circle.containsKey(hash)) {
