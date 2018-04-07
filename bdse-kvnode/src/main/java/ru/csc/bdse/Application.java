@@ -1,5 +1,6 @@
 package ru.csc.bdse;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
@@ -8,9 +9,10 @@ import ru.csc.bdse.kv.KeyValueApi;
 import ru.csc.bdse.kv.MongoDBKeyValueApi;
 import ru.csc.bdse.util.Env;
 
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @SpringBootApplication
 public class Application {
@@ -23,6 +25,18 @@ public class Application {
         return "kvnode-" + UUID.randomUUID().toString().substring(4);
     }
 
+    @Value("${coordinator.write.consistency.level}")
+    public int writeConsistencyLevel;
+
+    @Value("${coordinator.read.consistency.level}")
+    public int readConsistencyLevel;
+
+    @Value("${coordinator.nodes.number}")
+    public int nodesNumber;
+
+    @Value("${coordinator.timeout}")
+    public int timeout;
+
     @Bean
     KeyValueApi node() {
         String nodeName = Env.get(Env.KVNODE_NAME).orElseGet(Application::randomNodeName);
@@ -33,14 +47,10 @@ public class Application {
     CoordinatorKeyValueApi coordinator() {
         String nodeName = Env.get(Env.KVNODE_NAME).orElseGet(Application::randomNodeName);
 
-        return new CoordinatorKeyValueApi(
-                nodeName,
-                new ArrayList<>(
-                    Arrays.asList(
-                        node(),
-                        node(),
-                        node()
-                    )
-                ), 4, 2, 1000);
+        List<KeyValueApi> nodes = IntStream.range(0, nodesNumber)
+                .mapToObj(x -> node()).collect(Collectors.toList());
+
+        return new CoordinatorKeyValueApi(nodeName,
+                nodes, writeConsistencyLevel, readConsistencyLevel, timeout);
     }
 }
