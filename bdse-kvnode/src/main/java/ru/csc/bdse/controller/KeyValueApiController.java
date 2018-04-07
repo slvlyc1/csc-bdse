@@ -1,5 +1,6 @@
 package ru.csc.bdse.controller;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.csc.bdse.kv.KeyValueApi;
@@ -15,7 +16,8 @@ import java.util.Set;
  *
  * @author semkagtn
  */
-//@RestController
+@RestController
+@ConditionalOnProperty("simple.http.controller.enabled")
 public class KeyValueApiController {
 
     private final KeyValueApi keyValueApi;

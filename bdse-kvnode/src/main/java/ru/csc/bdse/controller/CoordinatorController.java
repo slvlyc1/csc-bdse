@@ -1,5 +1,6 @@
 package ru.csc.bdse.controller;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.csc.bdse.kv.CoordinatorKeyValueApi;
@@ -12,6 +13,7 @@ import java.util.Optional;
 import java.util.Set;
 
 @RestController
+@ConditionalOnProperty("coordinator.http.controller.enabled")
 public class CoordinatorController {
 
     private final CoordinatorKeyValueApi keyValueApi;
