@@ -26,9 +26,9 @@ public class LatestValueConflictResolverTest {
     @Test
     public void resolveLatestValue() throws Exception {
         // Given
-        RecordWithTimestamp recordOne = new RecordWithTimestamp("valueOne".getBytes(), 123000, false, "NODE_ONE");
-        RecordWithTimestamp recordTwo = new RecordWithTimestamp("valueTwo".getBytes(), 123010, false,"NODE_TWO");
-        RecordWithTimestamp recordThree = new RecordWithTimestamp("valueThree".getBytes(), 123005, false, "NODE_THREE");
+        RecordWithTimestamp recordOne = new RecordWithTimestamp("valueOne", 123000, false, "NODE_ONE");
+        RecordWithTimestamp recordTwo = new RecordWithTimestamp("valueTwo", 123010, false,"NODE_TWO");
+        RecordWithTimestamp recordThree = new RecordWithTimestamp("valueThree", 123005, false, "NODE_THREE");
 
         HashSet<RecordWithTimestamp> conflictingRecords = new HashSet<>(Arrays.asList(recordOne, recordTwo, recordThree));
 
@@ -42,10 +42,10 @@ public class LatestValueConflictResolverTest {
     @Test
     public void resolveMostCommonValue() throws Exception {
         //Given
-        RecordWithTimestamp recordOne = new RecordWithTimestamp("valueOne".getBytes(), 123000, false, "NODE_ONE");
-        RecordWithTimestamp recordTwo = new RecordWithTimestamp("commonValue".getBytes(), 123000, false, "NODE_TWO");
-        RecordWithTimestamp recordThree = new RecordWithTimestamp("commonValue".getBytes(), 123000, false, "NODE_THREE");
-        RecordWithTimestamp recordFour = new RecordWithTimestamp("valueFour".getBytes(), 123000, false, "NODE_FOUR");
+        RecordWithTimestamp recordOne = new RecordWithTimestamp("valueOne", 123000, false, "NODE_ONE");
+        RecordWithTimestamp recordTwo = new RecordWithTimestamp("commonValue", 123000, false, "NODE_TWO");
+        RecordWithTimestamp recordThree = new RecordWithTimestamp("commonValue", 123000, false, "NODE_THREE");
+        RecordWithTimestamp recordFour = new RecordWithTimestamp("valueFour", 123000, false, "NODE_FOUR");
 
         HashSet<RecordWithTimestamp> conflictingRecords = new HashSet<>(Arrays.asList(recordOne, recordTwo, recordThree, recordFour));
 
@@ -61,9 +61,29 @@ public class LatestValueConflictResolverTest {
     }
 
     @Test
+    public void resolveLatestRareValue() throws Exception {
+        //Given
+        RecordWithTimestamp recordOne = new RecordWithTimestamp("commonValue", 123000, false, "NODE_ONE");
+        RecordWithTimestamp recordTwo = new RecordWithTimestamp("commonValue", 123000, false, "NODE_TWO");
+        RecordWithTimestamp recordThree = new RecordWithTimestamp("rareValue", 123010, false, "NODE_THREE");
+        RecordWithTimestamp recordFour = new RecordWithTimestamp("commonValue", 123000, false, "NODE_FOUR");
+
+        HashSet<RecordWithTimestamp> conflictingRecords = new HashSet<>(Arrays.asList(recordOne, recordTwo, recordThree, recordFour));
+
+        // When
+        RecordWithTimestamp resolvedRecord = resolver.resolve(conflictingRecords);
+
+        // taking recrods with the latest timestamp -> 123010
+        // it is rare but latest
+
+        // Then
+        assertEquals(recordThree, resolvedRecord);
+    }
+
+    @Test
     public void resolveSingleValue() throws Exception {
         //Given
-        RecordWithTimestamp recordOne = new RecordWithTimestamp("valueOne".getBytes(), 123000, false, "NODE_ONE");
+        RecordWithTimestamp recordOne = new RecordWithTimestamp("valueOne", 123000, false, "NODE_ONE");
 
         HashSet<RecordWithTimestamp> conflictingRecords = new HashSet<>(Collections.singletonList(recordOne));
 

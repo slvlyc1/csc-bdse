@@ -13,6 +13,10 @@ public class RecordWithTimestamp {
         this.nodeId = nodeId;
     }
 
+    public RecordWithTimestamp(String value, long timestamp, boolean isDeleted, String nodeId) {
+        this(value.getBytes(), timestamp, isDeleted, nodeId);
+    }
+
     public byte[] getPayload() {
         return payload;
     }

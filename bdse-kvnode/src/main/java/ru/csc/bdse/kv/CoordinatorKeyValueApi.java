@@ -15,6 +15,7 @@ import static ru.csc.bdse.kv.NodeStatus.UP;
 public class CoordinatorKeyValueApi implements KeyValueApi {
 
     private List<KeyValueApi> keyValueNodes;
+    private final ConflictResolver conflictResolver;
     private int writeConsistencyLevel;
     private int readConsistencyLevel;
     private long timeout;
@@ -26,7 +27,8 @@ public class CoordinatorKeyValueApi implements KeyValueApi {
 
     public CoordinatorKeyValueApi(String nodeName, List<KeyValueApi> keyValueNodes, int writeConsistencyLevel, int readConsistencyLevel, long timeout) {
         this.nodeName = nodeName;
-        this.keyValueNodes = keyValueNodes;
+        this.keyValueNodes = Collections.unmodifiableList(keyValueNodes);
+        this.conflictResolver = new LatestValueConflictResolver();
         this.writeConsistencyLevel = writeConsistencyLevel;
         this.readConsistencyLevel = readConsistencyLevel;
         this.timeout = timeout;
@@ -35,9 +37,13 @@ public class CoordinatorKeyValueApi implements KeyValueApi {
 
     @Override
     public void put(String key, byte[] value) {
-        if (nodeStatus.equals(DOWN)) throw new IllegalStateException(String.format("Node '%s' is down", nodeName));
+        requireUpNode();
 
         writeToNodes(key, value, false);
+    }
+
+    private void requireUpNode() {
+        if (nodeStatus.equals(DOWN)) throw new IllegalStateException(String.format("Node '%s' is down", nodeName));
     }
 
     private void writeToNodes(String key, byte[] value, boolean isDeleted) {
@@ -71,7 +77,7 @@ public class CoordinatorKeyValueApi implements KeyValueApi {
     @Override
     public Optional<byte[]> get(String key) {
 
-        if (nodeStatus.equals(DOWN)) throw new IllegalStateException(String.format("Node '%s' is down", nodeName));
+        requireUpNode();
 
         CountDownLatch countDownLatch = new CountDownLatch(readConsistencyLevel);
 
@@ -102,7 +108,7 @@ public class CoordinatorKeyValueApi implements KeyValueApi {
                 .collect(Collectors.toSet());
 
         if (!conflictingRecords.isEmpty()) {
-            RecordWithTimestamp resolvedRecord = new LatestValueConflictResolver().resolve(conflictingRecords);
+            RecordWithTimestamp resolvedRecord = conflictResolver.resolve(conflictingRecords);
 
             return resolvedRecord.isDeleted() ? Optional.empty() : Optional.ofNullable(resolvedRecord.getPayload());
         }
@@ -120,7 +126,7 @@ public class CoordinatorKeyValueApi implements KeyValueApi {
 
     @Override
     public Set<String> getKeys(String prefix) {
-        if (nodeStatus.equals(DOWN)) throw new IllegalStateException(String.format("Node '%s' is down", nodeName));
+        requireUpNode();
 
         CountDownLatch countDownLatch = new CountDownLatch(readConsistencyLevel);
 
@@ -151,7 +157,7 @@ public class CoordinatorKeyValueApi implements KeyValueApi {
 
     @Override
     public void delete(String key) {
-        if (nodeStatus.equals(DOWN)) throw new IllegalStateException(String.format("Node '%s' is down", nodeName));
+        requireUpNode();
 
         byte[] value = get(key)
                 .orElseThrow(() -> new IllegalStateException(String.format("Failed to delete on non-existing key '%s'", key)));
