@@ -1,7 +1,13 @@
 package ru.csc.bdse.controller;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import ru.csc.bdse.kv.KeyValueApi;
 import ru.csc.bdse.kv.NodeAction;
 import ru.csc.bdse.kv.NodeInfo;
@@ -15,12 +21,11 @@ import java.util.Set;
  *
  * @author semkagtn
  */
-@RestController
-public class KeyValueApiController {
+public abstract class AbstractKeyValueApiController {
 
     private final KeyValueApi keyValueApi;
 
-    public KeyValueApiController(final KeyValueApi keyValueApi) {
+    public AbstractKeyValueApiController(final KeyValueApi keyValueApi) {
         this.keyValueApi = keyValueApi;
     }
 
