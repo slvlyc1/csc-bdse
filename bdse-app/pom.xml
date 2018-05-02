@@ -10,4 +10,10 @@
     </parent>
     <artifactId>bdse-app</artifactId>
 
+    <dependencies>
+        <dependency>
+            <groupId>ru.csc</groupId>
+            <artifactId>bdse-kvnode</artifactId>
+        </dependency>
+    </dependencies>
 </project>

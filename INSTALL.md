@@ -1,5 +1,5 @@
 #Что нужно для старта разработки:
-- Необходимо установить Java SE Development Kit 8 http://www.oracle.com/technetwork/java/javase/downloads/2133151  
+- Необходимо установить Java SE DevelopmSRent Kit 8 http://www.oracle.com/technetwork/java/javase/downloads/2133151  
 - Для первоначальной сборки проекта необходим доступ до maven-репозиториев зависимостей (может быть неожиданно много,
  но скачиваются один раз)
 - Необходимо установить Docker CE https://www.docker.com/community-edition
@@ -15,6 +15,8 @@
 
 #Сборка и запуск интеграционных тестов
 ./mvnw --projects bdse-kvnode clean package
+mvn -pl bdse-app -am compile
+mvn -pl bdse-app -am package
 ./mvnw --projects bdse-integration-tests --also-make test
 
 #Локальный запуск
