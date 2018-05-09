@@ -1,14 +1,14 @@
 package ru.csc.bdse.kv;
 
-import ru.csc.bdse.partitioning.ConsistentHashMd5Partitioner;
+import ru.csc.bdse.partitioning.FirstLetterPartitioner;
 import ru.csc.bdse.partitioning.Partitioner;
+
 import java.util.Set;
 
-public class ConsistantHashPartitionedKeyValueApiHttpClientTest extends AbstractPartitionedKeyValueApiHttpClientTest {
-
+public class FirstLetterPartitionerKeyValueApiTest extends AbstractPartitionedKeyValueApiHttpClientTest {
     @Override
     Partitioner getPartitioner(Set<String> nodes) {
-        return new ConsistentHashMd5Partitioner(nodes);
+        return new FirstLetterPartitioner(nodes);
     }
 
     @Override

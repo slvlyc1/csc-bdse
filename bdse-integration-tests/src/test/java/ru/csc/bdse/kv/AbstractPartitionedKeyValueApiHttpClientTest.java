@@ -4,7 +4,12 @@ import org.junit.Assert;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
+import ru.csc.bdse.partitioning.Partitioner;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 
 /**
@@ -15,17 +20,36 @@ import java.util.Set;
 @FixMethodOrder(MethodSorters.JVM)
 public abstract class AbstractPartitionedKeyValueApiHttpClientTest {
 
+    static final KeyValueApi node0 = new InMemoryKeyValueApi("node0");
+    static final KeyValueApi node1 = new InMemoryKeyValueApi("node1");
+    static final KeyValueApi node2 = new InMemoryKeyValueApi("node2");
+    static final Set<String> keys = IntStream.range(0, 1000).mapToObj(String::valueOf).collect(Collectors.toSet());
 
-    protected abstract KeyValueApi newCluster1();
-    protected abstract KeyValueApi newCluster2();
-    protected abstract Set<String> keys();
-    protected abstract float expectedKeysLossProportion();
-    protected abstract float expectedUndeletedKeysProportion();
+    private Map<String, KeyValueApi> firstClusterNodes = new HashMap<String, KeyValueApi>(){{
+        put("node0", node0);
+        put("node1", node1);
+        put("node2", node2);
+    }};
 
-    private KeyValueApi cluster1 = newCluster1();
-    private KeyValueApi cluster2 = newCluster2();
 
-    private Set<String> keys = keys();
+    private Map<String, KeyValueApi> secondClusterNodes = new HashMap<String, KeyValueApi>(){{
+        put("node0", node0);
+        put("node2", node2);
+    }};
+
+    Partitioner firstClusterPartitioner = getPartitioner(firstClusterNodes.keySet());
+    Partitioner secondClusterPartitioner = getPartitioner(secondClusterNodes.keySet());
+
+    private KeyValueApi cluster1 = new PartitioningKeyValueApi(firstClusterNodes, 3000, firstClusterPartitioner);
+    private KeyValueApi cluster2 = new PartitioningKeyValueApi(secondClusterNodes, 3000, secondClusterPartitioner);
+
+
+    abstract Partitioner getPartitioner(Set<String> nodes);
+
+    abstract float expectedKeysLossProportion();
+
+    abstract float expectedUndeletedKeysProportion();
+
 
     @Test
     public void put1000KeysAndReadItCorrectlyOnCluster1() {
